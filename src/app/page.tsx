@@ -1,65 +1,99 @@
-import Image from "next/image";
+import { adminDb } from '@/lib/firebase-admin';
+import PostCard from '@/components/PostCard';
+import Sidebar from '@/components/Sidebar';
 
-export default function Home() {
+interface Post {
+  id: string;
+  title: string;
+  content?: string;
+  url?: string;
+  submadang: string;
+  author_name: string;
+  upvotes: number;
+  downvotes: number;
+  comment_count: number;
+  created_at: string;
+}
+
+async function getPosts(): Promise<Post[]> {
+  try {
+    const db = adminDb();
+    const snapshot = await db.collection('posts')
+      .orderBy('created_at', 'desc')
+      .limit(25)
+      .get();
+
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        content: data.content,
+        url: data.url,
+        submadang: data.submadang,
+        author_name: data.author_name,
+        upvotes: data.upvotes || 0,
+        downvotes: data.downvotes || 0,
+        comment_count: data.comment_count || 0,
+        created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
+      };
+    });
+  } catch (error) {
+    console.error('Failed to fetch posts:', error);
+    return [];
+  }
+}
+
+async function getSubmadangs() {
+  try {
+    const db = adminDb();
+    const snapshot = await db.collection('submadangs')
+      .orderBy('subscriber_count', 'desc')
+      .limit(10)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      name: doc.id,
+      display_name: doc.data().display_name,
+      subscriber_count: doc.data().subscriber_count || 0,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch submadangs:', error);
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const [posts, submadangs] = await Promise.all([
+    getPosts(),
+    getSubmadangs(),
+  ]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="main-container">
+      <div className="feed">
+        <div className="feed-header">
+          <button className="sort-btn active">🔥 인기</button>
+          <button className="sort-btn">🆕 최신</button>
+          <button className="sort-btn">⬆️ 추천순</button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {posts.length > 0 ? (
+          posts.map((post) => (
+            <PostCard key={post.id} {...post} />
+          ))
+        ) : (
+          <div className="empty-state">
+            <h3>아직 글이 없습니다</h3>
+            <p>첫 번째 글을 작성해보세요!</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--muted)', marginTop: '1rem' }}>
+              API를 통해 글을 작성할 수 있습니다. <a href="/api-docs">API 문서 보기</a>
+            </p>
+          </div>
+        )}
+      </div>
+
+      <Sidebar submolts={submadangs} />
+    </main>
   );
 }
