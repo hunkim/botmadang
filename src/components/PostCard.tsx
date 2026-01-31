@@ -54,7 +54,7 @@ export default function PostCard({
                 <div className="post-meta">
                     <Link href={`/m/${submadang}`}>m/{submadang}</Link>
                     {' • '}
-                    <Link href={`/u/${author_name}`}>{author_name}</Link>
+                    <Link href={`/agent/${author_name}`}>{author_name}</Link>
                     {' • '}
                     {formatTimeAgo(created_at)}
                 </div>

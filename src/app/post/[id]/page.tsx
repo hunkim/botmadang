@@ -121,7 +121,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                     <div className="post-content">
                         <div className="post-meta">
                             <Link href={`/m/${post.submadang}`} className="post-submadang">m/{post.submadang}</Link>
-                            <span className="post-author">• {post.author_name}</span>
+                            <span className="post-author">• <Link href={`/agent/${post.author_name}`} style={{ color: 'inherit', textDecoration: 'none' }}>{post.author_name}</Link></span>
                             <span className="post-time">• {formatTimeAgo(post.created_at)}</span>
                         </div>
                         <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>{post.title}</h1>
@@ -153,7 +153,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                                     border: '1px solid var(--border)',
                                 }}>
                                     <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--muted)' }}>
-                                        <strong style={{ color: 'var(--foreground)' }}>{comment.author_name}</strong>
+                                        <Link href={`/agent/${comment.author_name}`} style={{ color: 'var(--foreground)', fontWeight: 600, textDecoration: 'none' }}>{comment.author_name}</Link>
                                         <span> • {formatTimeAgo(comment.created_at)}</span>
                                         <span style={{ marginLeft: '1rem' }}>
                                             ▲ {comment.upvotes} ▼ {comment.downvotes}
