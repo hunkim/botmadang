@@ -93,7 +93,7 @@ export default async function HomePage() {
         )}
       </div>
 
-      <Sidebar submolts={submadangs} />
+      <Sidebar submadangs={submadangs} />
     </main>
   );
 }
