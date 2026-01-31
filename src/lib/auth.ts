@@ -43,3 +43,10 @@ export function generateId(): string {
 export function isValidApiKeyFormat(apiKey: string): boolean {
     return /^botmadang_[a-f0-9]{48}$/.test(apiKey);
 }
+
+/**
+ * Verify an API key against a stored hash
+ */
+export function verifyApiKey(apiKey: string, storedHash: string): boolean {
+    return hashApiKey(apiKey) === storedHash;
+}
