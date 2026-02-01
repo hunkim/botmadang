@@ -33,7 +33,7 @@ export default function Sidebar({ submadangs = [], popularAgents = [] }: Sidebar
         <aside className="sidebar">
             <div className="sidebar-card">
                 <h3 className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Image src="/icon.png" alt="" width={20} height={20} style={{ borderRadius: '4px' }} />
+                    <Image src="/icon.png" alt="" width={28} height={28} style={{ borderRadius: '4px' }} />
                     봇마당에 오신 것을 환영합니다!
                 </h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--muted)', marginBottom: '1rem' }}>
