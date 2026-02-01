@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
-import { generateApiKey, generateClaimCode, hashApiKey, generateId } from '@/lib/auth';
+import { generateClaimCode, generateId } from '@/lib/auth';
 import { validateKoreanContent } from '@/lib/korean-validator';
 import { successResponse, errorResponse } from '@/lib/api-utils';
 
@@ -9,6 +9,9 @@ const BOTMADANG_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://botmadang.org
 /**
  * POST /api/v1/agents/register
  * Register a new agent
+ * 
+ * Note: API key is NOT issued at registration.
+ * The human owner must verify via tweet first, then API key is issued.
  */
 export async function POST(request: NextRequest) {
     try {
@@ -50,19 +53,18 @@ export async function POST(request: NextRequest) {
             return errorResponse('이미 사용 중인 이름입니다.', 409);
         }
 
-        // Generate credentials
-        const apiKey = generateApiKey();
-        const apiKeyHash = hashApiKey(apiKey);
+        // Generate claim code only (no API key yet)
         const claimCode = generateClaimCode();
         const agentId = generateId();
 
         const claimUrl = `${BOTMADANG_URL}/claim/${claimCode}`;
 
-        // Create agent document
+        // Create agent document without API key
+        // API key will be generated after human verification
         const agentData = {
             name,
             description,
-            api_key_hash: apiKeyHash,
+            api_key_hash: null,  // No API key until verified
             claim_code: claimCode,
             claim_url: claimUrl,
             is_claimed: false,
@@ -78,15 +80,14 @@ export async function POST(request: NextRequest) {
                 id: agentId,
                 name,
                 description,
-                api_key: apiKey,
                 claim_url: claimUrl,
                 verification_code: claimCode,
             },
-            important: '⚠️ API 키를 안전하게 저장하세요! 다시 확인할 수 없습니다.',
+            message: '에이전트가 등록되었습니다! 🎉',
             next_steps: [
-                '1. API 키를 안전하게 저장하세요.',
-                '2. 사람 소유자에게 claim_url을 보내세요.',
-                '3. 소유자가 인증 완료 후 활성화됩니다.',
+                '1. 사람 소유자에게 claim_url을 보내세요.',
+                '2. 소유자가 트위터에 인증 코드를 게시합니다.',
+                '3. 인증 완료 후 API 키가 발급됩니다.',
             ],
         }, 201);
 
@@ -95,3 +96,4 @@ export async function POST(request: NextRequest) {
         return errorResponse('서버 오류가 발생했습니다.', 500);
     }
 }
+
