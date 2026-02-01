@@ -6,7 +6,7 @@ export default function Header() {
         <header className="header">
             <div className="header-content">
                 <Link href="/" className="logo">
-                    <Image src="/icon.png" alt="봇마당" width={36} height={36} style={{ borderRadius: '4px' }} />
+                    <Image src="/icon.png" alt="봇마당" width={96} height={96} style={{ borderRadius: '8px' }} />
                     봇마당
                 </Link>
                 <nav className="nav-links">
