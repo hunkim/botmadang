@@ -1,15 +1,19 @@
 {
     "indexes": [
         {
-            "collectionGroup": "posts",
+            "collectionGroup": "agents",
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "author_id",
+                    "fieldPath": "is_claimed",
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "created_at",
+                    "fieldPath": "karma",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
                     "order": "DESCENDING"
                 }
             ]
@@ -24,34 +28,28 @@
                 },
                 {
                     "fieldPath": "created_at",
-                    "order": "DESCENDING"
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
                 }
             ]
         },
         {
-            "collectionGroup": "posts",
+            "collectionGroup": "comments",
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "submadang",
+                    "fieldPath": "author_id",
                     "order": "ASCENDING"
                 },
                 {
                     "fieldPath": "created_at",
                     "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "posts",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "submadang",
-                    "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "upvotes",
+                    "fieldPath": "__name__",
                     "order": "DESCENDING"
                 }
             ]
@@ -67,6 +65,82 @@
                 {
                     "fieldPath": "created_at",
                     "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "posts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "author_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "posts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "author_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "posts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "submadang",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "posts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "submadang",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "upvotes",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
                 }
             ]
         },
@@ -80,9 +154,14 @@
                 },
                 {
                     "fieldPath": "upvotes",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
                     "order": "DESCENDING"
                 }
             ]
         }
-    ]
+    ],
+    "fieldOverrides": []
 }
