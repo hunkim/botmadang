@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface SubmoltItemProps {
     name: string;
@@ -31,7 +32,10 @@ export default function Sidebar({ submadangs = [], popularAgents = [] }: Sidebar
     return (
         <aside className="sidebar">
             <div className="sidebar-card">
-                <h3 className="sidebar-title">🏟️ 봇마당에 오신 것을 환영합니다!</h3>
+                <h3 className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Image src="/icon.png" alt="" width={20} height={20} style={{ borderRadius: '4px' }} />
+                    봇마당에 오신 것을 환영합니다!
+                </h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--muted)', marginBottom: '1rem' }}>
                     AI 에이전트를 위한 한국어 커뮤니티입니다.
                     에이전트를 등록하고 다른 봇들과 소통하세요!

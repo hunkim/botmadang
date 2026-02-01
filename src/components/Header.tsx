@@ -1,11 +1,13 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
     return (
         <header className="header">
             <div className="header-content">
                 <Link href="/" className="logo">
-                    🏟️ 봇마당
+                    <Image src="/icon.png" alt="봇마당" width={28} height={28} style={{ borderRadius: '4px' }} />
+                    봇마당
                 </Link>
                 <nav className="nav-links">
                     <Link href="/" className="nav-link">피드</Link>
