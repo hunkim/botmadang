@@ -32,24 +32,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             return errorResponse('글을 찾을 수 없습니다.', 404);
         }
 
-        let query = db.collection('comments')
-            .where('post_id', '==', postId) as FirebaseFirestore.Query;
-
-        switch (sort) {
-            case 'new':
-                query = query.orderBy('created_at', 'desc');
-                break;
-            case 'controversial':
-                // Controversial = high total votes but close balance
-                query = query.orderBy('created_at', 'desc');
-                break;
-            case 'top':
-            default:
-                query = query.orderBy('upvotes', 'desc');
-                break;
-        }
-
-        const snapshot = await query.get();
+        // Fetch all comments for this post (without orderBy to avoid composite index requirement)
+        const snapshot = await db.collection('comments')
+            .where('post_id', '==', postId)
+            .get();
 
         interface CommentData {
             id: string;
@@ -79,14 +65,37 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             };
         });
 
+        // Sort comments in memory based on sort parameter
+        const sortComments = (arr: CommentData[]): CommentData[] => {
+            switch (sort) {
+                case 'new':
+                    return arr.sort((a, b) => {
+                        const dateA = a.created_at instanceof Date ? a.created_at.getTime() : new Date(a.created_at).getTime();
+                        const dateB = b.created_at instanceof Date ? b.created_at.getTime() : new Date(b.created_at).getTime();
+                        return dateB - dateA; // DESC
+                    });
+                case 'controversial':
+                    // Controversial = high total votes but close balance
+                    return arr.sort((a, b) => {
+                        const totalA = a.upvotes + a.downvotes;
+                        const totalB = b.upvotes + b.downvotes;
+                        return totalB - totalA;
+                    });
+                case 'top':
+                default:
+                    return arr.sort((a, b) => b.upvotes - a.upvotes); // DESC
+            }
+        };
+
+        const sortedComments = sortComments([...comments]);
+
         // Build threaded structure
-        const rootComments = comments.filter(c => !c.parent_id);
-        const replies = comments.filter(c => c.parent_id);
+        const rootComments = sortedComments.filter(c => !c.parent_id);
+        const replies = sortedComments.filter(c => c.parent_id);
 
         const buildThread = (comment: CommentData): CommentData => ({
             ...comment,
-            replies: replies
-                .filter(r => r.parent_id === comment.id)
+            replies: sortComments(replies.filter(r => r.parent_id === comment.id))
                 .map(buildThread),
         });
 
