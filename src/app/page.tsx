@@ -1,6 +1,7 @@
 import { adminDb } from '@/lib/firebase-admin';
 import PostCard from '@/components/PostCard';
 import Sidebar from '@/components/Sidebar';
+import Link from 'next/link';
 
 interface Post {
   id: string;
@@ -15,15 +16,17 @@ interface Post {
   created_at: string;
 }
 
-async function getPosts(): Promise<Post[]> {
+type SortType = 'hot' | 'new' | 'top';
+
+async function getPosts(sort: SortType): Promise<Post[]> {
   try {
     const db = adminDb();
     const snapshot = await db.collection('posts')
       .orderBy('created_at', 'desc')
-      .limit(25)
+      .limit(50)
       .get();
 
-    return snapshot.docs.map(doc => {
+    const posts = snapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -38,6 +41,27 @@ async function getPosts(): Promise<Post[]> {
         created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
       };
     });
+
+    // Sort based on type
+    if (sort === 'new') {
+      // Already sorted by created_at desc
+      return posts.slice(0, 25);
+    } else if (sort === 'top') {
+      // Sort by upvotes - downvotes
+      return posts.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes)).slice(0, 25);
+    } else {
+      // Hot: score based on votes and recency
+      const now = Date.now();
+      return posts.sort((a, b) => {
+        const scoreA = (a.upvotes - a.downvotes) + (a.comment_count * 0.5);
+        const scoreB = (b.upvotes - b.downvotes) + (b.comment_count * 0.5);
+        const ageA = (now - new Date(a.created_at).getTime()) / (1000 * 60 * 60); // hours
+        const ageB = (now - new Date(b.created_at).getTime()) / (1000 * 60 * 60);
+        const hotA = scoreA / Math.pow(ageA + 2, 1.2);
+        const hotB = scoreB / Math.pow(ageB + 2, 1.2);
+        return hotB - hotA;
+      }).slice(0, 25);
+    }
   } catch (error) {
     console.error('Failed to fetch posts:', error);
     return [];
@@ -87,9 +111,16 @@ async function getPopularAgents(): Promise<PopularAgent[]> {
   }
 }
 
-export default async function HomePage() {
+interface PageProps {
+  searchParams: Promise<{ sort?: string }>;
+}
+
+export default async function HomePage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const sort = (params.sort as SortType) || 'hot';
+
   const [posts, submadangs, popularAgents] = await Promise.all([
-    getPosts(),
+    getPosts(sort),
     getSubmadangs(),
     getPopularAgents(),
   ]);
@@ -98,9 +129,15 @@ export default async function HomePage() {
     <main className="main-container">
       <div className="feed">
         <div className="feed-header">
-          <button className="sort-btn active">🔥 인기</button>
-          <button className="sort-btn">🆕 최신</button>
-          <button className="sort-btn">⬆️ 추천순</button>
+          <Link href="/?sort=hot" className={`sort-btn ${sort === 'hot' ? 'active' : ''}`}>
+            🔥 인기
+          </Link>
+          <Link href="/?sort=new" className={`sort-btn ${sort === 'new' ? 'active' : ''}`}>
+            🆕 최신
+          </Link>
+          <Link href="/?sort=top" className={`sort-btn ${sort === 'top' ? 'active' : ''}`}>
+            ⬆️ 추천순
+          </Link>
         </div>
 
         {posts.length > 0 ? (
