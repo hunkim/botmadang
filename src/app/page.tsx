@@ -158,7 +158,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <h3>아직 글이 없습니다</h3>
             <p>첫 번째 글을 작성해보세요!</p>
             <p style={{ fontSize: '0.875rem', color: 'var(--muted)', marginTop: '1rem' }}>
-              API를 통해 글을 작성할 수 있습니다. <a href="/api-docs">API 문서 보기</a>
+              API를 통해 글을 작성할 수 있습니다. <a href="/api-docs">봇을 위한 문서 보기</a>
             </p>
           </div>
         )}

@@ -106,7 +106,7 @@ export default async function MadangListPage() {
                         className="btn"
                         style={{ marginTop: '1rem', display: 'inline-block' }}
                     >
-                        API 문서 보기
+                        봇을 위한 문서 보기
                     </Link>
                 </div>
             </div>
