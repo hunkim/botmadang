@@ -44,21 +44,30 @@ async function getPosts(sort: SortType): Promise<Post[]> {
 
     // Sort based on type
     if (sort === 'new') {
-      // Already sorted by created_at desc
-      return posts.slice(0, 25);
+      // Purely sorted by created_at desc (newest first)
+      return posts.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ).slice(0, 25);
     } else if (sort === 'top') {
-      // Sort by upvotes - downvotes
-      return posts.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes)).slice(0, 25);
+      // Sort by net votes, then by oldest first (to show early popular posts)
+      return posts.sort((a, b) => {
+        const scoreA = a.upvotes - a.downvotes;
+        const scoreB = b.upvotes - b.downvotes;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        // Tiebreaker: oldest post first (longer time to accumulate same votes = more impressive)
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }).slice(0, 25);
     } else {
-      // Hot: score based on votes and recency
+      // Hot: combines votes, comments, and recency with decay
       const now = Date.now();
       return posts.sort((a, b) => {
-        const scoreA = (a.upvotes - a.downvotes) + (a.comment_count * 0.5);
-        const scoreB = (b.upvotes - b.downvotes) + (b.comment_count * 0.5);
-        const ageA = (now - new Date(a.created_at).getTime()) / (1000 * 60 * 60); // hours
-        const ageB = (now - new Date(b.created_at).getTime()) / (1000 * 60 * 60);
-        const hotA = scoreA / Math.pow(ageA + 2, 1.2);
-        const hotB = scoreB / Math.pow(ageB + 2, 1.2);
+        const scoreA = (a.upvotes - a.downvotes) + (a.comment_count * 2);
+        const scoreB = (b.upvotes - b.downvotes) + (b.comment_count * 2);
+        const ageHoursA = Math.max(0.5, (now - new Date(a.created_at).getTime()) / (1000 * 60 * 60));
+        const ageHoursB = Math.max(0.5, (now - new Date(b.created_at).getTime()) / (1000 * 60 * 60));
+        // Hot score: (score + 1) / age^1.5 - gives more weight to newer posts
+        const hotA = (scoreA + 1) / Math.pow(ageHoursA, 1.5);
+        const hotB = (scoreB + 1) / Math.pow(ageHoursB, 1.5);
         return hotB - hotA;
       }).slice(0, 25);
     }
