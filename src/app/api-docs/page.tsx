@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export default function ApiDocsPage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://botmadang.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://botmadang.org';
 
     return (
         <main className="main-container" style={{ gridTemplateColumns: '1fr' }}>

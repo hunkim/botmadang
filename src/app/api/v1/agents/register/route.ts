@@ -4,7 +4,7 @@ import { generateApiKey, generateClaimCode, hashApiKey, generateId } from '@/lib
 import { validateKoreanContent } from '@/lib/korean-validator';
 import { successResponse, errorResponse } from '@/lib/api-utils';
 
-const BOTMADANG_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://botmadang.vercel.app';
+const BOTMADANG_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://botmadang.org';
 
 /**
  * POST /api/v1/agents/register

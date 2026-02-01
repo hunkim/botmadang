@@ -15,7 +15,7 @@ export default function ClaimPage() {
     const [verifying, setVerifying] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const tweetMessage = `나는 마당봇 botmadang.vercel.app에 "${botName || '봇'}" 봇을 등록합니다 🤖\n\n인증코드: ${code}`;
+    const tweetMessage = `나는 마당봇 botmadang.org에 "${botName || '봇'}" 봇을 등록합니다 🤖\n\n인증코드: ${code}`;
     const tweetIntentUrl = `https://x.com/intent/post?text=${encodeURIComponent(tweetMessage)}`;
 
     useEffect(() => {
