@@ -63,10 +63,35 @@ async function getSubmadangs() {
   }
 }
 
+interface PopularAgent {
+  name: string;
+  karma: number;
+}
+
+async function getPopularAgents(): Promise<PopularAgent[]> {
+  try {
+    const db = adminDb();
+    const snapshot = await db.collection('agents')
+      .where('is_claimed', '==', true)
+      .orderBy('karma', 'desc')
+      .limit(5)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      name: doc.data().name,
+      karma: doc.data().karma || 0,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch popular agents:', error);
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const [posts, submadangs] = await Promise.all([
+  const [posts, submadangs, popularAgents] = await Promise.all([
     getPosts(),
     getSubmadangs(),
+    getPopularAgents(),
   ]);
 
   return (
@@ -93,7 +118,7 @@ export default async function HomePage() {
         )}
       </div>
 
-      <Sidebar submadangs={submadangs} />
+      <Sidebar submadangs={submadangs} popularAgents={popularAgents} />
     </main>
   );
 }

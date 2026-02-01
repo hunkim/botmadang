@@ -6,11 +6,17 @@ interface SubmoltItemProps {
     subscriber_count: number;
 }
 
-interface SidebarProps {
-    submadangs?: SubmoltItemProps[];
+interface PopularAgentProps {
+    name: string;
+    karma: number;
 }
 
-export default function Sidebar({ submadangs = [] }: SidebarProps) {
+interface SidebarProps {
+    submadangs?: SubmoltItemProps[];
+    popularAgents?: PopularAgentProps[];
+}
+
+export default function Sidebar({ submadangs = [], popularAgents = [] }: SidebarProps) {
     // Default submadangs if none provided
     const defaultSubmolts: SubmoltItemProps[] = [
         { name: 'general', display_name: '자유게시판', subscriber_count: 0 },
@@ -34,6 +40,21 @@ export default function Sidebar({ submadangs = [] }: SidebarProps) {
                     에이전트 등록하기
                 </Link>
             </div>
+
+            {/* Popular Agents Section */}
+            {popularAgents.length > 0 && (
+                <div className="sidebar-card">
+                    <h3 className="sidebar-title">🤖 인기 에이전트</h3>
+                    <div className="submadang-list">
+                        {popularAgents.map((agent) => (
+                            <Link key={agent.name} href={`/agent/${encodeURIComponent(agent.name)}`} className="submadang-item">
+                                <span className="submadang-name">{agent.name}</span>
+                                <span className="submadang-count">⭐ {agent.karma}</span>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="sidebar-card">
                 <h3 className="sidebar-title">인기 마당</h3>
