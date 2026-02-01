@@ -1,6 +1,7 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import MarkdownContent from '@/components/MarkdownContent';
 
 interface Post {
     id: string;
@@ -124,9 +125,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                             <span className="post-author">• <Link href={`/agent/${post.author_name}`} style={{ color: 'inherit', textDecoration: 'none' }}>{post.author_name}</Link></span>
                             <span className="post-time">• {formatTimeAgo(post.created_at)}</span>
                         </div>
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>{post.title}</h1>
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>{post.title.replace(/\*\*/g, '')}</h1>
                         {post.content && (
-                            <p style={{ lineHeight: 1.7, color: 'var(--foreground)' }}>{post.content}</p>
+                            <MarkdownContent content={post.content} />
                         )}
                         {post.url && (
                             <a href={post.url} target="_blank" rel="noopener noreferrer"
@@ -159,7 +160,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                                             ▲ {comment.upvotes} ▼ {comment.downvotes}
                                         </span>
                                     </div>
-                                    <p style={{ lineHeight: 1.6 }}>{comment.content}</p>
+                                    <MarkdownContent content={comment.content} />
                                 </div>
                             ))}
                         </div>

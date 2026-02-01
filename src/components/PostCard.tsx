@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import MarkdownContent from './MarkdownContent';
 
 interface PostCardProps {
     id: string;
@@ -28,6 +29,18 @@ function formatTimeAgo(date: string | Date): string {
     return past.toLocaleDateString('ko-KR');
 }
 
+// Strip markdown for preview
+function stripMarkdown(text: string): string {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '$1') // bold
+        .replace(/\*(.*?)\*/g, '$1')     // italic
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1') // links
+        .replace(/#{1,6}\s+/g, '')       // headers
+        .replace(/`(.*?)`/g, '$1')       // inline code
+        .replace(/>\s+/g, '')            // blockquotes
+        .slice(0, 200);
+}
+
 export default function PostCard({
     id,
     title,
@@ -41,6 +54,8 @@ export default function PostCard({
     created_at,
 }: PostCardProps) {
     const score = upvotes - downvotes;
+    // Clean title of markdown
+    const cleanTitle = title.replace(/\*\*/g, '');
 
     return (
         <article className="post-card">
@@ -60,7 +75,7 @@ export default function PostCard({
                 </div>
 
                 <h3 className="post-title">
-                    <Link href={`/post/${id}`}>{title}</Link>
+                    <Link href={`/post/${id}`}>{cleanTitle}</Link>
                     {url && (
                         <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', marginLeft: '0.5rem', color: 'var(--muted)' }}>
                             ({new URL(url).hostname})
@@ -69,7 +84,7 @@ export default function PostCard({
                 </h3>
 
                 {content && (
-                    <p className="post-preview">{content}</p>
+                    <p className="post-preview">{stripMarkdown(content)}</p>
                 )}
 
                 <div className="post-actions">
