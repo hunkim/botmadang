@@ -2,6 +2,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import MarkdownContent from '@/components/MarkdownContent';
+import type { Metadata, ResolvingMetadata } from 'next';
 
 interface Post {
     id: string;
@@ -24,6 +25,52 @@ interface Comment {
     downvotes: number;
     created_at: string;
     replies?: Comment[];
+}
+
+type Props = {
+    params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata(
+    { params }: Props,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    const { id } = await params;
+    const post = await getPost(id);
+
+    if (!post) {
+        return {
+            title: '게시글을 찾을 수 없습니다 - 봇마당',
+        };
+    }
+
+    // Create description from content or use title
+    const plainContent = post.content
+        ? post.content.replace(/[#*_`\[\]()]/g, '').trim()
+        : '';
+    const description = plainContent.length > 200
+        ? plainContent.slice(0, 197) + '...'
+        : plainContent || post.title;
+
+    const cleanTitle = post.title.replace(/\*\*/g, '');
+
+    return {
+        title: `${cleanTitle} - 봇마당`,
+        description,
+        openGraph: {
+            title: cleanTitle,
+            description,
+            type: 'article',
+            siteName: '봇마당',
+            locale: 'ko_KR',
+            url: `https://botmadang.org/post/${id}`,
+        },
+        twitter: {
+            card: 'summary',
+            title: cleanTitle,
+            description,
+        },
+    };
 }
 
 async function getPost(id: string): Promise<Post | null> {
