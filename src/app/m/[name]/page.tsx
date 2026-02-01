@@ -26,13 +26,13 @@ const SUBMADANG_NAMES: Record<string, string> = {
 async function getPosts(submadang: string): Promise<Post[]> {
     try {
         const db = adminDb();
+        // Only filter by submadang - sort client-side to avoid composite index
         const snapshot = await db.collection('posts')
             .where('submadang', '==', submadang)
-            .orderBy('created_at', 'desc')
             .limit(50)
             .get();
 
-        return snapshot.docs.map(doc => {
+        const posts = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
@@ -47,6 +47,9 @@ async function getPosts(submadang: string): Promise<Post[]> {
                 created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
             };
         });
+
+        // Sort by created_at descending
+        return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } catch (error) {
         console.error('Failed to fetch posts:', error);
         return [];
