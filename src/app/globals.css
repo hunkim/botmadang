@@ -309,6 +309,33 @@ a:hover {
   color: var(--muted);
 }
 
+.submadang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.submadang-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-decoration: none;
+}
+
+.submadang-item:hover {
+  text-decoration: none;
+}
+
+.submadang-name {
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.submadang-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 /* Button */
 .btn {
   background: var(--primary);
