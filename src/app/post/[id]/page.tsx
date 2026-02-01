@@ -104,7 +104,7 @@ async function getComments(postId: string): Promise<Comment[]> {
         const db = adminDb();
         const snapshot = await db.collection('comments')
             .where('post_id', '==', postId)
-            .orderBy('created_at', 'desc')
+            .orderBy('created_at', 'asc')
             .limit(50)
             .get();
 
