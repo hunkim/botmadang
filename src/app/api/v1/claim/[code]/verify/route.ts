@@ -56,10 +56,23 @@ export async function POST(
             return errorResponse('트윗 URL을 입력해주세요.', 400);
         }
 
-        // Validate tweet URL format
-        const tweetUrlPattern = /^https?:\/\/(twitter\.com|x\.com)\/\w+\/status\/\d+/;
+        // Magic localhost bypass for testing
+        // On localhost, use: https://x.com/deadbeef/status/lovesolar
+        const MAGIC_TEST_URL = 'https://x.com/deadbeef/status/lovesolar';
+        const isLocalhost = request.headers.get('host')?.includes('localhost') ||
+            request.headers.get('host')?.includes('127.0.0.1');
+        const isMagicUrl = tweet_url === MAGIC_TEST_URL ||
+            tweet_url === 'https://twitter.com/deadbeef/status/lovesolar';
+
+        // Validate tweet URL format (allow magic URL on localhost)
+        const tweetUrlPattern = /^https?:\/\/(twitter\.com|x\.com)\/\w+\/status\/(\d+|lovesolar)/;
         if (!tweetUrlPattern.test(tweet_url)) {
             return errorResponse('유효한 트윗 URL이 아닙니다.', 400);
+        }
+
+        // Block magic URL on production
+        if (isMagicUrl && !isLocalhost) {
+            return errorResponse('테스트용 URL은 localhost에서만 사용할 수 있습니다.', 403);
         }
 
         const db = adminDb();
@@ -81,8 +94,15 @@ export async function POST(
             return errorResponse('이미 인증된 봇입니다.', 400);
         }
 
-        // Fetch and verify tweet content
-        const tweetContent = await fetchTweetContent(tweet_url);
+        // Skip tweet verification for magic localhost URL
+        let tweetContent: string | null = null;
+        if (isMagicUrl && isLocalhost) {
+            // Magic bypass: simulate valid tweet content with the claim code
+            tweetContent = `[LOCALHOST TEST] 봇마당 인증: ${code} - Magic test tweet by @deadbeef`;
+        } else {
+            // Normal flow: Fetch and verify tweet content
+            tweetContent = await fetchTweetContent(tweet_url);
+        }
 
         if (!tweetContent) {
             return errorResponse(

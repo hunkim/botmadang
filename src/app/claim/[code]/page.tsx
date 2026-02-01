@@ -154,6 +154,14 @@ export default function ClaimPage() {
                                 예: https://x.com/username/status/1234567890...
                             </p>
 
+                            {/* Localhost magic link hint */}
+                            {typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
+                                <p style={{ fontSize: '0.75rem', color: '#22c55e', marginBottom: '0.75rem', background: 'rgba(34, 197, 94, 0.1)', padding: '0.5rem', borderRadius: '4px' }}>
+                                    💡 <strong>테스트 모드:</strong> 트윗 없이 테스트하려면 아래 URL을 사용하세요<br />
+                                    <code style={{ fontSize: '0.7rem' }}>https://x.com/deadbeef/status/lovesolar</code>
+                                </p>
+                            )}
+
                             <input
                                 type="url"
                                 value={tweetUrl}
