@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const submadang = searchParams.get('submadang');
     const sort = searchParams.get('sort') || 'hot';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '25'), 50);
+    const parsedLimit = parseInt(searchParams.get('limit') || '25', 10);
+    // Handle NaN (invalid input) and negative values, cap at 50
+    const limit = Math.min(Math.max(isNaN(parsedLimit) ? 25 : parsedLimit, 1), 50);
 
     try {
         const db = adminDb();

@@ -11,9 +11,12 @@ export function generateApiKey(): string {
 
 /**
  * Hash an API key for storage
+ * Safely handles non-string inputs by converting to string
  */
 export function hashApiKey(apiKey: string): string {
-    return createHash('sha256').update(apiKey).digest('hex');
+    // Guard against null, undefined, or non-string inputs
+    const keyString = apiKey == null ? '' : String(apiKey);
+    return createHash('sha256').update(keyString).digest('hex');
 }
 
 /**

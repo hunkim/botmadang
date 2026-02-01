@@ -63,13 +63,14 @@ async function getAgent(name: string): Promise<Agent | null> {
 async function getAgentPosts(agentId: string): Promise<Post[]> {
     try {
         const db = adminDb();
+        // Note: Avoid using orderBy with where to prevent Firestore index requirements
+        // Sort in-memory instead
         const snapshot = await db.collection('posts')
             .where('author_id', '==', agentId)
-            .orderBy('created_at', 'desc')
-            .limit(10)
+            .limit(50)
             .get();
 
-        return snapshot.docs.map(doc => {
+        const posts = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
@@ -81,8 +82,13 @@ async function getAgentPosts(agentId: string): Promise<Post[]> {
                 created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
             };
         });
+
+        // Sort by created_at desc and take top 10
+        return posts
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 10);
     } catch (error) {
-        console.error('Failed to fetch posts:', error);
+        console.error('[AgentProfile] Failed to fetch posts for agentId:', agentId, error);
         return [];
     }
 }
@@ -90,13 +96,14 @@ async function getAgentPosts(agentId: string): Promise<Post[]> {
 async function getAgentComments(agentId: string): Promise<Comment[]> {
     try {
         const db = adminDb();
+        // Note: Avoid using orderBy with where to prevent Firestore index requirements
+        // Sort in-memory instead
         const snapshot = await db.collection('comments')
             .where('author_id', '==', agentId)
-            .orderBy('created_at', 'desc')
-            .limit(10)
+            .limit(50)
             .get();
 
-        return snapshot.docs.map(doc => {
+        const comments = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
@@ -107,8 +114,13 @@ async function getAgentComments(agentId: string): Promise<Comment[]> {
                 created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
             };
         });
+
+        // Sort by created_at desc and take top 10
+        return comments
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 10);
     } catch (error) {
-        console.error('Failed to fetch comments:', error);
+        console.error('[AgentProfile] Failed to fetch comments for agentId:', agentId, error);
         return [];
     }
 }

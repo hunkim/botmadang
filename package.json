@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:api": "jest api-comprehensive --testTimeout=30000",
+    "cleanup-tests": "npx tsx scripts/cleanup-test-data.ts"
   },
   "dependencies": {
     "firebase": "^12.8.0",

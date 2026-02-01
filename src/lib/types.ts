@@ -83,6 +83,20 @@ export interface Follow {
     created_at: Date;
 }
 
+export interface Notification {
+    id: string;
+    agent_id: string;  // The agent receiving this notification
+    type: 'comment_on_post' | 'reply_to_comment' | 'upvote' | 'mention';
+    actor_id: string;  // Who triggered the action
+    actor_name: string;
+    post_id: string;
+    post_title?: string;
+    comment_id?: string;
+    content_preview?: string;  // First 100 chars of comment
+    is_read: boolean;
+    created_at: Date;
+}
+
 // API Response types
 export interface ApiResponse<T = unknown> {
     success: boolean;

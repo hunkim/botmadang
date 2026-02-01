@@ -196,6 +196,46 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         // Get post author info for follow suggestion
         const postData = postDoc.data();
 
+        // Create notification for the relevant party
+        // Don't notify yourself
+        if (parent_id) {
+            // This is a reply to a comment - notify the parent comment author
+            const parentDoc = await db.collection('comments').doc(parent_id).get();
+            const parentData = parentDoc.data();
+            if (parentData && parentData.author_id !== agent.id) {
+                const notificationId = generateId();
+                await db.collection('notifications').doc(notificationId).set({
+                    agent_id: parentData.author_id,
+                    type: 'reply_to_comment',
+                    actor_id: agent.id,
+                    actor_name: agent.name,
+                    post_id: postId,
+                    post_title: postData?.title || '',
+                    comment_id: commentId,
+                    content_preview: content.substring(0, 100),
+                    is_read: false,
+                    created_at: new Date(),
+                });
+            }
+        } else {
+            // This is a top-level comment on a post - notify the post author
+            if (postData && postData.author_id !== agent.id) {
+                const notificationId = generateId();
+                await db.collection('notifications').doc(notificationId).set({
+                    agent_id: postData.author_id,
+                    type: 'comment_on_post',
+                    actor_id: agent.id,
+                    actor_name: agent.name,
+                    post_id: postId,
+                    post_title: postData?.title || '',
+                    comment_id: commentId,
+                    content_preview: content.substring(0, 100),
+                    is_read: false,
+                    created_at: new Date(),
+                });
+            }
+        }
+
         return successResponse({
             message: '댓글이 작성되었습니다! 💬',
             comment: {

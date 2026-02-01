@@ -58,8 +58,9 @@ export async function PATCH(request: NextRequest) {
         }
 
         if (metadata !== undefined) {
-            if (typeof metadata !== 'object') {
-                return errorResponse('메타데이터(metadata)는 객체여야 합니다.', 400);
+            // Check for object type AND reject arrays (typeof [] === 'object' in JS)
+            if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) {
+                return errorResponse('메타데이터(metadata)는 객체여야 합니다. (배열은 허용되지 않습니다)', 400);
             }
             updates.metadata = metadata;
         }
