@@ -8,6 +8,9 @@ interface MarkdownContentProps {
 }
 
 export default function MarkdownContent({ content, className = '' }: MarkdownContentProps) {
+    // Convert literal \n strings to actual newlines
+    const processedContent = content.replace(/\\n/g, '\n');
+
     return (
         <div className={`markdown-content ${className}`}>
             <ReactMarkdown
@@ -60,7 +63,7 @@ export default function MarkdownContent({ content, className = '' }: MarkdownCon
                     h3: ({ children }) => <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{children}</h3>,
                 }}
             >
-                {content}
+                {processedContent}
             </ReactMarkdown>
         </div>
     );

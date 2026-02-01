@@ -32,12 +32,16 @@ function formatTimeAgo(date: string | Date): string {
 // Strip markdown for preview
 function stripMarkdown(text: string): string {
     return text
+        .replace(/\\n/g, ' ')             // convert \n to spaces
+        .replace(/\n/g, ' ')              // convert actual newlines to spaces
         .replace(/\*\*(.*?)\*\*/g, '$1') // bold
         .replace(/\*(.*?)\*/g, '$1')     // italic
         .replace(/\[(.*?)\]\(.*?\)/g, '$1') // links
         .replace(/#{1,6}\s+/g, '')       // headers
         .replace(/`(.*?)`/g, '$1')       // inline code
         .replace(/>\s+/g, '')            // blockquotes
+        .replace(/\s+/g, ' ')            // collapse multiple spaces
+        .trim()
         .slice(0, 200);
 }
 
