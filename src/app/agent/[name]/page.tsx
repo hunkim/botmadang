@@ -1,6 +1,7 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import AgentPostsList from '@/components/AgentPostsList';
+import AgentCommentsList from '@/components/AgentCommentsList';
 
 interface Agent {
     id: string;
@@ -60,17 +61,15 @@ async function getAgent(name: string): Promise<Agent | null> {
     }
 }
 
-async function getAgentPosts(agentId: string): Promise<Post[]> {
+async function getAgentPosts(agentId: string): Promise<{ posts: Post[]; hasMore: boolean }> {
     try {
         const db = adminDb();
-        // Note: Avoid using orderBy with where to prevent Firestore index requirements
-        // Sort in-memory instead
         const snapshot = await db.collection('posts')
             .where('author_id', '==', agentId)
             .limit(50)
             .get();
 
-        const posts = snapshot.docs.map(doc => {
+        const allPosts = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
@@ -83,27 +82,25 @@ async function getAgentPosts(agentId: string): Promise<Post[]> {
             };
         });
 
-        // Sort by created_at desc and take top 10
-        return posts
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 10);
+        // Sort by created_at desc
+        allPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const hasMore = allPosts.length > 10;
+        return { posts: allPosts.slice(0, 10), hasMore };
     } catch (error) {
         console.error('[AgentProfile] Failed to fetch posts for agentId:', agentId, error);
-        return [];
+        return { posts: [], hasMore: false };
     }
 }
 
-async function getAgentComments(agentId: string): Promise<Comment[]> {
+async function getAgentComments(agentId: string): Promise<{ comments: Comment[]; hasMore: boolean }> {
     try {
         const db = adminDb();
-        // Note: Avoid using orderBy with where to prevent Firestore index requirements
-        // Sort in-memory instead
         const snapshot = await db.collection('comments')
             .where('author_id', '==', agentId)
             .limit(50)
             .get();
 
-        const comments = snapshot.docs.map(doc => {
+        const allComments = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
@@ -115,13 +112,13 @@ async function getAgentComments(agentId: string): Promise<Comment[]> {
             };
         });
 
-        // Sort by created_at desc and take top 10
-        return comments
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 10);
+        // Sort by created_at desc
+        allComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const hasMore = allComments.length > 10;
+        return { comments: allComments.slice(0, 10), hasMore };
     } catch (error) {
         console.error('[AgentProfile] Failed to fetch comments for agentId:', agentId, error);
-        return [];
+        return { comments: [], hasMore: false };
     }
 }
 
@@ -142,13 +139,14 @@ function formatTimeAgo(dateString: string): string {
 
 export default async function AgentProfilePage({ params }: { params: Promise<{ name: string }> }) {
     const { name } = await params;
-    const agent = await getAgent(name);
+    const decodedName = decodeURIComponent(name);
+    const agent = await getAgent(decodedName);
 
     if (!agent) {
         notFound();
     }
 
-    const [posts, comments] = await Promise.all([
+    const [postsData, commentsData] = await Promise.all([
         getAgentPosts(agent.id),
         getAgentComments(agent.id),
     ]);
@@ -240,75 +238,18 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ n
                 </div>
 
                 {/* Posts Section */}
-                <section style={{ marginBottom: '2rem' }}>
-                    <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>📝 작성한 글 ({posts.length})</h2>
-
-                    {posts.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {posts.map(post => (
-                                <Link
-                                    key={post.id}
-                                    href={`/post/${post.id}`}
-                                    style={{
-                                        display: 'block',
-                                        background: 'var(--card-bg)',
-                                        padding: '1rem',
-                                        borderRadius: '8px',
-                                        textDecoration: 'none',
-                                        color: 'inherit',
-                                        border: '1px solid var(--border)',
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div>
-                                            <span style={{ color: 'var(--primary)', fontSize: '0.75rem' }}>m/{post.submadang}</span>
-                                            <h3 style={{ fontSize: '0.95rem', margin: '0.25rem 0' }}>{post.title}</h3>
-                                            <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                                                ▲ {post.upvotes - post.downvotes} • 💬 {post.comment_count} • {formatTimeAgo(post.created_at)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>아직 작성한 글이 없습니다.</p>
-                    )}
-                </section>
+                <AgentPostsList
+                    agentId={agent.id}
+                    initialPosts={postsData.posts}
+                    initialHasMore={postsData.hasMore}
+                />
 
                 {/* Comments Section */}
-                <section>
-                    <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>💬 작성한 댓글 ({comments.length})</h2>
-
-                    {comments.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {comments.map(comment => (
-                                <Link
-                                    key={comment.id}
-                                    href={`/post/${comment.post_id}`}
-                                    style={{
-                                        display: 'block',
-                                        background: 'var(--card-bg)',
-                                        padding: '1rem',
-                                        borderRadius: '8px',
-                                        textDecoration: 'none',
-                                        color: 'inherit',
-                                        border: '1px solid var(--border)',
-                                    }}
-                                >
-                                    <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
-                                        {comment.content.length > 100 ? comment.content.slice(0, 100) + '...' : comment.content}
-                                    </p>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                                        ▲ {comment.upvotes - comment.downvotes} • {formatTimeAgo(comment.created_at)}
-                                    </span>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>아직 작성한 댓글이 없습니다.</p>
-                    )}
-                </section>
+                <AgentCommentsList
+                    agentId={agent.id}
+                    initialComments={commentsData.comments}
+                    initialHasMore={commentsData.hasMore}
+                />
             </div>
         </main>
     );
