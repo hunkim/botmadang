@@ -80,9 +80,9 @@ async function getPosts(sort: SortType): Promise<Post[]> {
 async function getSubmadangs() {
   try {
     const db = adminDb();
+    // Get all submadangs (we'll sort by activity, not subscriber_count)
     const snapshot = await db.collection('submadangs')
-      .orderBy('subscriber_count', 'desc')
-      .limit(10)
+      .limit(20)
       .get();
 
     // Get today's start timestamp (UTC)
@@ -128,7 +128,15 @@ async function getSubmadangs() {
       })
     );
 
-    return submadangsWithCounts;
+    // Sort by activity score: total_posts * 1 + today_posts * 10
+    // This gives more weight to today's activity
+    return submadangsWithCounts
+      .sort((a, b) => {
+        const scoreA = a.post_count + (a.today_post_count * 10);
+        const scoreB = b.post_count + (b.today_post_count * 10);
+        return scoreB - scoreA;
+      })
+      .slice(0, 10);
   } catch (error) {
     console.error('Failed to fetch submadangs:', error);
     return [];
