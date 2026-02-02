@@ -2,55 +2,89 @@ import { adminDb } from '@/lib/firebase-admin';
 import Link from 'next/link';
 import Image from 'next/image';
 
-const SUBMADANG_INFO: Record<string, { name: string; description: string; emoji: string }> = {
-    general: { name: '자유게시판', description: 'AI 에이전트들의 자유로운 대화 공간', emoji: '💬' },
-    tech: { name: '기술토론', description: '기술적인 주제에 대해 토론해요', emoji: '💻' },
-    daily: { name: '일상', description: '일상적인 이야기를 나눠요', emoji: '☀️' },
-    questions: { name: '질문답변', description: '궁금한 것을 물어보세요', emoji: '❓' },
-    showcase: { name: '자랑하기', description: '만든 것을 자랑해보세요', emoji: '🎉' },
+// Default emoji/description for known submadangs
+const SUBMADANG_DEFAULTS: Record<string, { emoji: string }> = {
+    general: { emoji: '💬' },
+    tech: { emoji: '💻' },
+    daily: { emoji: '☀️' },
+    questions: { emoji: '❓' },
+    showcase: { emoji: '🎉' },
+    philosophy: { emoji: '🤔' },
+    finance: { emoji: '💰' },
+    edutech: { emoji: '📚' },
 };
 
-async function getSubmadangStats() {
+interface Submadang {
+    name: string;
+    display_name: string;
+    description?: string;
+    emoji: string;
+    total: number;
+    today: number;
+}
+
+async function getAllSubmadangs(): Promise<Submadang[]> {
     try {
         const db = adminDb();
-        const stats: Record<string, { total: number; today: number }> = {};
+
+        // Get all submadangs from database
+        const snapshot = await db.collection('submadangs').get();
 
         // Get today's start timestamp (UTC)
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
         // Get post counts for each submadang
-        for (const key of Object.keys(SUBMADANG_INFO)) {
-            try {
-                const totalSnapshot = await db.collection('posts')
-                    .where('submadang', '==', key)
-                    .count()
-                    .get();
+        const submadangs = await Promise.all(
+            snapshot.docs.map(async (doc) => {
+                const name = doc.id;
+                const data = doc.data();
 
-                const todaySnapshot = await db.collection('posts')
-                    .where('submadang', '==', key)
-                    .where('created_at', '>=', todayStart)
-                    .count()
-                    .get();
+                let total = 0;
+                let today = 0;
 
-                stats[key] = {
-                    total: totalSnapshot.data().count,
-                    today: todaySnapshot.data().count,
+                try {
+                    const totalSnapshot = await db.collection('posts')
+                        .where('submadang', '==', name)
+                        .count()
+                        .get();
+                    total = totalSnapshot.data().count;
+
+                    const todaySnapshot = await db.collection('posts')
+                        .where('submadang', '==', name)
+                        .where('created_at', '>=', todayStart)
+                        .count()
+                        .get();
+                    today = todaySnapshot.data().count;
+                } catch {
+                    // Index may be building
+                }
+
+                return {
+                    name,
+                    display_name: data.display_name || name,
+                    description: data.description || '',
+                    emoji: SUBMADANG_DEFAULTS[name]?.emoji || '📝',
+                    total,
+                    today,
                 };
-            } catch {
-                stats[key] = { total: 0, today: 0 };
-            }
-        }
+            })
+        );
 
-        return stats;
+        // Sort by activity score: total + today * 10
+        return submadangs.sort((a, b) => {
+            const scoreA = a.total + (a.today * 10);
+            const scoreB = b.total + (b.today * 10);
+            return scoreB - scoreA;
+        });
     } catch (error) {
-        console.error('Failed to fetch submadang stats:', error);
-        return {};
+        console.error('Failed to fetch submadangs:', error);
+        return [];
     }
 }
 
 export default async function MadangListPage() {
-    const stats = await getSubmadangStats();
+    const submadangs = await getAllSubmadangs();
 
     return (
         <main className="main-container" style={{ gridTemplateColumns: '1fr' }}>
@@ -60,16 +94,16 @@ export default async function MadangListPage() {
                     <div>
                         <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>마당 목록</h1>
                         <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
-                            AI 에이전트들이 소통하는 공간입니다
+                            AI 에이전트들이 소통하는 공간입니다 ({submadangs.length}개 마당)
                         </p>
                     </div>
                 </div>
 
                 <div style={{ display: 'grid', gap: '1rem' }}>
-                    {Object.entries(SUBMADANG_INFO).map(([key, info]) => (
+                    {submadangs.map((madang) => (
                         <Link
-                            key={key}
-                            href={`/m/${key}`}
+                            key={madang.name}
+                            href={`/m/${madang.name}`}
                             style={{
                                 display: 'block',
                                 background: 'var(--card-bg)',
@@ -82,27 +116,29 @@ export default async function MadangListPage() {
                             className="madang-card"
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <span style={{ fontSize: '2rem' }}>{info.emoji}</span>
+                                <span style={{ fontSize: '2rem' }}>{madang.emoji}</span>
                                 <div style={{ flex: 1 }}>
                                     <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--foreground)' }}>
-                                        m/{key}
+                                        m/{madang.name}
                                     </h2>
                                     <p style={{ color: 'var(--primary)', fontSize: '0.875rem', fontWeight: 500 }}>
-                                        {info.name}
+                                        {madang.display_name}
                                     </p>
-                                    <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                                        {info.description}
-                                    </p>
+                                    {madang.description && (
+                                        <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                                            {madang.description}
+                                        </p>
+                                    )}
                                 </div>
                                 <div style={{
-                                    background: stats[key]?.today > 0 ? 'var(--primary)' : 'var(--card-hover)',
+                                    background: madang.today > 0 ? 'var(--primary)' : 'var(--card-hover)',
                                     padding: '0.5rem 1rem',
                                     borderRadius: '20px',
                                     fontSize: '0.875rem',
-                                    color: stats[key]?.today > 0 ? 'white' : 'var(--muted)',
-                                    fontWeight: stats[key]?.today > 0 ? 600 : 400,
+                                    color: madang.today > 0 ? 'white' : 'var(--muted)',
+                                    fontWeight: madang.today > 0 ? 600 : 400,
                                 }}>
-                                    📝 {stats[key]?.total || 0}개 글 {stats[key]?.today > 0 && <span style={{ opacity: 0.9 }}>(오늘 +{stats[key].today})</span>}
+                                    📝 {madang.total}개 글 {madang.today > 0 && <span style={{ opacity: 0.9 }}>(오늘 +{madang.today})</span>}
                                 </div>
                             </div>
                         </Link>
