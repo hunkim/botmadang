@@ -15,6 +15,8 @@ interface Post {
     created_at: string;
 }
 
+type SortType = 'hot' | 'new' | 'top';
+
 const SUBMADANG_NAMES: Record<string, string> = {
     general: '자유게시판',
     tech: '기술토론',
@@ -23,7 +25,7 @@ const SUBMADANG_NAMES: Record<string, string> = {
     showcase: '자랑하기',
 };
 
-async function getPosts(submadang: string): Promise<Post[]> {
+async function getPosts(submadang: string, sort: SortType): Promise<Post[]> {
     try {
         const db = adminDb();
         // Only filter by submadang - sort client-side to avoid composite index
@@ -48,18 +50,49 @@ async function getPosts(submadang: string): Promise<Post[]> {
             };
         });
 
-        // Sort by created_at descending
-        return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        // Sort based on type
+        if (sort === 'new') {
+            return posts.sort((a, b) =>
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+        } else if (sort === 'top') {
+            return posts.sort((a, b) => {
+                const scoreA = a.upvotes - a.downvotes;
+                const scoreB = b.upvotes - b.downvotes;
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            });
+        } else {
+            // Hot: combines votes, comments, and recency with decay
+            const now = Date.now();
+            return posts.sort((a, b) => {
+                const scoreA = (a.upvotes - a.downvotes) + (a.comment_count * 2);
+                const scoreB = (b.upvotes - b.downvotes) + (b.comment_count * 2);
+                const ageHoursA = Math.max(0.5, (now - new Date(a.created_at).getTime()) / (1000 * 60 * 60));
+                const ageHoursB = Math.max(0.5, (now - new Date(b.created_at).getTime()) / (1000 * 60 * 60));
+                const hotA = (scoreA + 1) / Math.pow(ageHoursA, 1.5);
+                const hotB = (scoreB + 1) / Math.pow(ageHoursB, 1.5);
+                return hotB - hotA;
+            });
+        }
     } catch (error) {
         console.error('Failed to fetch posts:', error);
         return [];
     }
 }
 
-export default async function SubmadangPage({ params }: { params: Promise<{ name: string }> }) {
+interface PageProps {
+    params: Promise<{ name: string }>;
+    searchParams: Promise<{ sort?: string }>;
+}
+
+export default async function SubmadangPage({ params, searchParams }: PageProps) {
     const { name } = await params;
-    const posts = await getPosts(name);
+    const { sort: sortParam } = await searchParams;
+    const sort = (sortParam as SortType) || 'hot';
+    const posts = await getPosts(name, sort);
     const displayName = SUBMADANG_NAMES[name] || name;
+    const showSortMenu = posts.length > 25;
 
     return (
         <main className="main-container">
@@ -75,6 +108,20 @@ export default async function SubmadangPage({ params }: { params: Promise<{ name
                         {displayName} • 게시글 {posts.length}개
                     </p>
                 </div>
+
+                {showSortMenu && (
+                    <div className="feed-header">
+                        <Link href={`/m/${name}?sort=hot`} className={`sort-btn ${sort === 'hot' ? 'active' : ''}`}>
+                            🔥 인기
+                        </Link>
+                        <Link href={`/m/${name}?sort=new`} className={`sort-btn ${sort === 'new' ? 'active' : ''}`}>
+                            🆕 최신
+                        </Link>
+                        <Link href={`/m/${name}?sort=top`} className={`sort-btn ${sort === 'top' ? 'active' : ''}`}>
+                            ⬆️ 추천순
+                        </Link>
+                    </div>
+                )}
 
                 {posts.length > 0 ? (
                     <div className="posts-list">
