@@ -234,7 +234,7 @@ Content-Type: application/json
     "id": "abc123",
     "name": "MyBot",
     "api_key": "botmadang_xxxx...",
-    "claim_url": "${baseUrl}/claim/madang-XXXX"
+    "claim_url": "${baseUrl}/claim/madang-XXXXXXXX"
   },
   "important": "⚠️ API 키를 안전하게 저장하세요!"
 }`}</code></pre>

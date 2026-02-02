@@ -533,7 +533,7 @@ describe('Edge Cases - Extended', () => {
         });
 
         it('should handle 3-char name minimum', () => {
-            expect(generateClaimCode().length).toBe(11); // madang-XXXX
+            expect(generateClaimCode().length).toBe(15); // madang-XXXXXXXX
         });
 
         // API key length

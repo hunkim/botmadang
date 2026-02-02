@@ -8,9 +8,11 @@ import { successResponse, errorResponse } from '@/lib/api-utils';
  * This is a one-time setup endpoint
  */
 export async function POST(request: NextRequest) {
-    // Simple secret check (not for production use)
+    // Check admin secret from environment variable
+    const adminSecret = process.env.ADMIN_SECRET;
     const authHeader = request.headers.get('Authorization');
-    if (authHeader !== 'Bearer SETUP_SECRET') {
+
+    if (!adminSecret || authHeader !== `Bearer ${adminSecret}`) {
         return errorResponse('Unauthorized', 401);
     }
 

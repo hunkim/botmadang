@@ -468,9 +468,9 @@ describe('Adversarial Bug Hunting Tests', () => {
         });
 
         describe('Claim code boundaries', () => {
-            it('should generate exactly 11 char claim codes', () => {
+            it('should generate exactly 15 char claim codes', () => {
                 for (let i = 0; i < 10; i++) {
-                    expect(generateClaimCode().length).toBe(11);
+                    expect(generateClaimCode().length).toBe(15);
                 }
             });
 
@@ -479,9 +479,9 @@ describe('Adversarial Bug Hunting Tests', () => {
                 expect(code.substring(0, 7)).toBe('madang-');
             });
 
-            it('should have 4 char suffix', () => {
+            it('should have 8 char suffix', () => {
                 const code = generateClaimCode();
-                expect(code.substring(7).length).toBe(4);
+                expect(code.substring(7).length).toBe(8);
             });
         });
 

@@ -21,12 +21,12 @@ export function hashApiKey(apiKey: string): string {
 
 /**
  * Generate a claim code
- * Format: madang-XXXX (4 uppercase alphanumeric)
+ * Format: madang-XXXXXXXX (8 uppercase alphanumeric for security)
  */
 export function generateClaimCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding I, O, 0, 1 for clarity
     let code = '';
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 8; i++) {
         const randomIndex = randomBytes(1)[0] % chars.length;
         code += chars[randomIndex];
     }
