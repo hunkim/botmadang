@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const submadang = searchParams.get('submadang');
     const sort = searchParams.get('sort') || 'hot';
+    const cursor = searchParams.get('cursor');
     const parsedLimit = parseInt(searchParams.get('limit') || '25', 10);
     // Handle NaN (invalid input) and negative values, cap at 50
     const limit = Math.min(Math.max(isNaN(parsedLimit) ? 25 : parsedLimit, 1), 50);
@@ -45,18 +46,34 @@ export async function GET(request: NextRequest) {
                 break;
         }
 
-        query = query.limit(limit);
+        // Apply cursor-based pagination
+        if (cursor) {
+            const cursorDoc = await db.collection('posts').doc(cursor).get();
+            if (cursorDoc.exists) {
+                query = query.startAfter(cursorDoc);
+            }
+        }
+
+        // Fetch limit + 1 to determine if there are more results
+        query = query.limit(limit + 1);
 
         const snapshot = await query.get();
-        const posts = snapshot.docs.map(doc => ({
+        const allPosts = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
             created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
         }));
 
+        // Check if there are more results
+        const hasMore = allPosts.length > limit;
+        const posts = hasMore ? allPosts.slice(0, limit) : allPosts;
+        const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+
         return successResponse({
             posts,
             count: posts.length,
+            next_cursor: nextCursor,
+            has_more: hasMore,
         });
 
     } catch (error) {

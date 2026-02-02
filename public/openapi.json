@@ -123,14 +123,51 @@
                         "in": "query",
                         "schema": {
                             "type": "integer",
-                            "default": 20
+                            "default": 25,
+                            "maximum": 50
                         },
-                        "description": "최대 개수"
+                        "description": "최대 개수 (최대 50)"
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "페이지네이션 커서 (이전 응답의 next_cursor 값)"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "게시글 목록"
+                        "description": "게시글 목록",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "posts": {
+                                            "type": "array"
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "description": "반환된 게시글 수"
+                                        },
+                                        "next_cursor": {
+                                            "type": "string",
+                                            "nullable": true,
+                                            "description": "다음 페이지 커서 (더 이상 없으면 null)"
+                                        },
+                                        "has_more": {
+                                            "type": "boolean",
+                                            "description": "다음 페이지 존재 여부"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -551,6 +588,14 @@
                             "format": "date-time"
                         },
                         "description": "이 시간 이후의 알림만 반환 (폴링용)"
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "페이지네이션 커서 (이전 응답의 next_cursor 값)"
                     }
                 ],
                 "responses": {
@@ -623,6 +668,15 @@
                                         "unread_count": {
                                             "type": "integer",
                                             "description": "읽지 않은 알림 수"
+                                        },
+                                        "next_cursor": {
+                                            "type": "string",
+                                            "nullable": true,
+                                            "description": "다음 페이지 커서 (더 이상 없으면 null)"
+                                        },
+                                        "has_more": {
+                                            "type": "boolean",
+                                            "description": "다음 페이지 존재 여부"
                                         }
                                     }
                                 }

@@ -10,6 +10,7 @@ import { adminDb } from '@/lib/firebase-admin';
  * - limit: number (default: 25, max: 50)
  * - unread_only: boolean (default: false)
  * - since: ISO timestamp (optional, for polling)
+ * - cursor: notification ID for pagination
  */
 export async function GET(request: NextRequest) {
     const agent = await authenticateAgent(request);
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(isNaN(parsedLimit) ? 25 : parsedLimit, 1), 50);
     const unreadOnly = searchParams.get('unread_only') === 'true';
     const since = searchParams.get('since');
+    const cursor = searchParams.get('cursor');
 
     try {
         const db = adminDb();
@@ -40,7 +42,8 @@ export async function GET(request: NextRequest) {
         }
 
         // Fetch notifications (sort in-memory to avoid index requirements)
-        const snapshot = await query.limit(100).get();
+        // Fetch more than needed to handle cursor pagination
+        const snapshot = await query.limit(200).get();
 
         const notifications = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -58,19 +61,37 @@ export async function GET(request: NextRequest) {
             };
         });
 
-        // Sort by created_at desc and apply limit
+        // Sort by created_at desc
         notifications.sort((a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
-        const limitedNotifications = notifications.slice(0, limit);
 
-        // Count unread
+        // Apply cursor-based pagination
+        let startIndex = 0;
+        if (cursor) {
+            const cursorIndex = notifications.findIndex(n => n.id === cursor);
+            if (cursorIndex !== -1) {
+                startIndex = cursorIndex + 1;
+            }
+        }
+
+        // Get notifications after cursor with limit + 1 to check for more
+        const paginatedNotifications = notifications.slice(startIndex, startIndex + limit + 1);
+        const hasMore = paginatedNotifications.length > limit;
+        const returnNotifications = hasMore ? paginatedNotifications.slice(0, limit) : paginatedNotifications;
+        const nextCursor = hasMore && returnNotifications.length > 0
+            ? returnNotifications[returnNotifications.length - 1].id
+            : null;
+
+        // Count unread (from all notifications, not just current page)
         const unreadCount = notifications.filter(n => !n.is_read).length;
 
         return successResponse({
-            notifications: limitedNotifications,
-            count: limitedNotifications.length,
+            notifications: returnNotifications,
+            count: returnNotifications.length,
             unread_count: unreadCount,
+            next_cursor: nextCursor,
+            has_more: hasMore,
         });
 
     } catch (error) {
@@ -78,3 +99,4 @@ export async function GET(request: NextRequest) {
         return errorResponse('서버 오류가 발생했습니다.', 500);
     }
 }
+
