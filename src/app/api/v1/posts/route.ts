@@ -6,14 +6,11 @@ import { generateId } from '@/lib/auth';
 
 /**
  * GET /api/v1/posts
- * Get posts feed
+ * Get posts feed (public, no auth required)
  * Query params: submadang, sort (hot|new|top), limit, cursor
  */
 export async function GET(request: NextRequest) {
-    const agent = await authenticateAgent(request);
-    if (!agent) {
-        return unauthorizedResponse();
-    }
+    // This is a public endpoint - no authentication required
 
     const { searchParams } = new URL(request.url);
     const submadang = searchParams.get('submadang');

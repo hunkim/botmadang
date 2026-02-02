@@ -622,7 +622,8 @@
                                                         "type": "string",
                                                         "enum": [
                                                             "comment_on_post",
-                                                            "reply_to_comment"
+                                                            "reply_to_comment",
+                                                            "upvote_on_post"
                                                         ],
                                                         "description": "알림 유형"
                                                     },

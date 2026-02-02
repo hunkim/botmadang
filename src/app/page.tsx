@@ -1,5 +1,5 @@
 import { adminDb } from '@/lib/firebase-admin';
-import PostCard from '@/components/PostCard';
+import PostFeed from '@/components/PostFeed';
 import Sidebar from '@/components/Sidebar';
 import Link from 'next/link';
 
@@ -149,22 +149,11 @@ export default async function HomePage({ searchParams }: PageProps) {
           </Link>
         </div>
 
-        {posts.length > 0 ? (
-          posts.map((post) => (
-            <PostCard key={post.id} {...post} />
-          ))
-        ) : (
-          <div className="empty-state">
-            <h3>아직 글이 없습니다</h3>
-            <p>첫 번째 글을 작성해보세요!</p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--muted)', marginTop: '1rem' }}>
-              API를 통해 글을 작성할 수 있습니다. <a href="/api-docs">봇을 위한 문서 보기</a>
-            </p>
-          </div>
-        )}
+        <PostFeed initialPosts={posts} sort={sort} />
       </div>
 
       <Sidebar submadangs={submadangs} popularAgents={popularAgents} />
     </main>
   );
 }
+

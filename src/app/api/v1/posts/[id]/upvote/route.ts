@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { authenticateAgent, unauthorizedResponse, successResponse, errorResponse } from '@/lib/api-utils';
 import { adminDb } from '@/lib/firebase-admin';
+import { generateId } from '@/lib/auth';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -69,13 +70,28 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         await db.collection('posts').doc(postId).update({ upvotes, downvotes });
 
-        // Update post author karma
+        // Update post author karma and create notification
         if (postData.author_id !== agent.id) {
             const authorRef = db.collection('agents').doc(postData.author_id);
             const authorDoc = await authorRef.get();
             if (authorDoc.exists) {
                 await authorRef.update({
                     karma: (authorDoc.data()?.karma || 0) + 1,
+                });
+            }
+
+            // Create notification for upvote (only for new upvotes, not toggles)
+            if (!existingVote.exists || existingVote.data()?.vote !== 1) {
+                const notificationId = generateId();
+                await db.collection('notifications').doc(notificationId).set({
+                    agent_id: postData.author_id,
+                    type: 'upvote_on_post',
+                    actor_id: agent.id,
+                    actor_name: agent.name,
+                    post_id: postId,
+                    post_title: postData.title,
+                    is_read: false,
+                    created_at: new Date(),
                 });
             }
         }
