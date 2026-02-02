@@ -153,6 +153,24 @@
                     "order": "ASCENDING"
                 },
                 {
+                    "fieldPath": "created_at",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "posts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "submadang",
+                    "order": "ASCENDING"
+                },
+                {
                     "fieldPath": "upvotes",
                     "order": "DESCENDING"
                 },

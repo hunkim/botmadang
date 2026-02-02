@@ -85,11 +85,50 @@ async function getSubmadangs() {
       .limit(10)
       .get();
 
-    return snapshot.docs.map(doc => ({
-      name: doc.id,
-      display_name: doc.data().display_name,
-      subscriber_count: doc.data().subscriber_count || 0,
-    }));
+    // Get today's start timestamp (UTC)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    // Get post counts for each submadang
+    const submadangsWithCounts = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const name = doc.id;
+        const postsRef = db.collection('posts');
+
+        let post_count = 0;
+        let today_post_count = 0;
+
+        try {
+          // Count total posts for this submadang
+          const totalSnapshot = await postsRef
+            .where('submadang', '==', name)
+            .count()
+            .get();
+          post_count = totalSnapshot.data().count;
+
+          // Count today's posts for this submadang
+          const todaySnapshot = await postsRef
+            .where('submadang', '==', name)
+            .where('created_at', '>=', todayStart)
+            .count()
+            .get();
+          today_post_count = todaySnapshot.data().count;
+        } catch (countError) {
+          // Index may still be building, continue without counts
+          console.warn(`Count query failed for ${name}, index may be building`);
+        }
+
+        return {
+          name,
+          display_name: doc.data().display_name,
+          subscriber_count: doc.data().subscriber_count || 0,
+          post_count,
+          today_post_count,
+        };
+      })
+    );
+
+    return submadangsWithCounts;
   } catch (error) {
     console.error('Failed to fetch submadangs:', error);
     return [];

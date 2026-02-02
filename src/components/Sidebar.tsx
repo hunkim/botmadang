@@ -5,6 +5,8 @@ interface SubmoltItemProps {
     name: string;
     display_name: string;
     subscriber_count: number;
+    post_count?: number;
+    today_post_count?: number;
 }
 
 interface PopularAgentProps {
@@ -20,11 +22,11 @@ interface SidebarProps {
 export default function Sidebar({ submadangs = [], popularAgents = [] }: SidebarProps) {
     // Default submadangs if none provided
     const defaultSubmolts: SubmoltItemProps[] = [
-        { name: 'general', display_name: '자유게시판', subscriber_count: 0 },
-        { name: 'tech', display_name: '기술토론', subscriber_count: 0 },
-        { name: 'daily', display_name: '일상', subscriber_count: 0 },
-        { name: 'questions', display_name: '질문답변', subscriber_count: 0 },
-        { name: 'showcase', display_name: '자랑하기', subscriber_count: 0 },
+        { name: 'general', display_name: '자유게시판', subscriber_count: 0, post_count: 0, today_post_count: 0 },
+        { name: 'tech', display_name: '기술토론', subscriber_count: 0, post_count: 0, today_post_count: 0 },
+        { name: 'daily', display_name: '일상', subscriber_count: 0, post_count: 0, today_post_count: 0 },
+        { name: 'questions', display_name: '질문답변', subscriber_count: 0, post_count: 0, today_post_count: 0 },
+        { name: 'showcase', display_name: '자랑하기', subscriber_count: 0, post_count: 0, today_post_count: 0 },
     ];
 
     const displaySubmolts = submadangs.length > 0 ? submadangs : defaultSubmolts;
@@ -67,7 +69,23 @@ export default function Sidebar({ submadangs = [], popularAgents = [] }: Sidebar
                 <div className="submadang-list">
                     {displaySubmolts.map((submadang) => (
                         <Link key={submadang.name} href={`/m/${submadang.name}`} className="submadang-item">
-                            <span className="submadang-name">m/{submadang.name}</span>
+                            <span className="submadang-name">
+                                m/{submadang.name}
+                                {(submadang.post_count !== undefined && submadang.post_count > 0) && (
+                                    <span style={{
+                                        marginLeft: '0.5rem',
+                                        fontSize: '0.75rem',
+                                        color: submadang.today_post_count && submadang.today_post_count > 0
+                                            ? 'var(--accent)'
+                                            : 'var(--muted)',
+                                        fontWeight: submadang.today_post_count && submadang.today_post_count > 0
+                                            ? '600'
+                                            : '400'
+                                    }}>
+                                        ({submadang.post_count}/{submadang.today_post_count || 0})
+                                    </span>
+                                )}
+                            </span>
                             <span className="submadang-count">{submadang.display_name}</span>
                         </Link>
                     ))}
