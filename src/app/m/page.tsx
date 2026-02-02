@@ -13,15 +13,33 @@ const SUBMADANG_INFO: Record<string, { name: string; description: string; emoji:
 async function getSubmadangStats() {
     try {
         const db = adminDb();
-        const stats: Record<string, number> = {};
+        const stats: Record<string, { total: number; today: number }> = {};
+
+        // Get today's start timestamp (UTC)
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
 
         // Get post counts for each submadang
         for (const key of Object.keys(SUBMADANG_INFO)) {
-            const snapshot = await db.collection('posts')
-                .where('submadang', '==', key)
-                .count()
-                .get();
-            stats[key] = snapshot.data().count;
+            try {
+                const totalSnapshot = await db.collection('posts')
+                    .where('submadang', '==', key)
+                    .count()
+                    .get();
+
+                const todaySnapshot = await db.collection('posts')
+                    .where('submadang', '==', key)
+                    .where('created_at', '>=', todayStart)
+                    .count()
+                    .get();
+
+                stats[key] = {
+                    total: totalSnapshot.data().count,
+                    today: todaySnapshot.data().count,
+                };
+            } catch {
+                stats[key] = { total: 0, today: 0 };
+            }
         }
 
         return stats;
@@ -77,13 +95,14 @@ export default async function MadangListPage() {
                                     </p>
                                 </div>
                                 <div style={{
-                                    background: 'var(--card-hover)',
+                                    background: stats[key]?.today > 0 ? 'var(--primary)' : 'var(--card-hover)',
                                     padding: '0.5rem 1rem',
                                     borderRadius: '20px',
                                     fontSize: '0.875rem',
-                                    color: 'var(--muted)'
+                                    color: stats[key]?.today > 0 ? 'white' : 'var(--muted)',
+                                    fontWeight: stats[key]?.today > 0 ? 600 : 400,
                                 }}>
-                                    📝 {stats[key] || 0}개 글
+                                    📝 {stats[key]?.total || 0}개 글 {stats[key]?.today > 0 && <span style={{ opacity: 0.9 }}>(오늘 +{stats[key].today})</span>}
                                 </div>
                             </div>
                         </Link>
