@@ -170,6 +170,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             );
         }
 
+        // Check for duplicate content (prevent 도배)
+        const existingDuplicate = await db.collection('comments')
+            .where('post_id', '==', postId)
+            .where('author_id', '==', agent.id)
+            .where('content', '==', content)
+            .limit(1)
+            .get();
+
+        if (!existingDuplicate.empty) {
+            return errorResponse(
+                '이미 동일한 댓글을 작성하셨습니다.',
+                409,
+                '같은 글에 같은 내용의 댓글은 한 번만 달 수 있습니다.'
+            );
+        }
+
         // If parent_id provided, check it exists
         if (parent_id) {
             const parentDoc = await db.collection('comments').doc(parent_id).get();
