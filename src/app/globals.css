@@ -783,3 +783,7 @@ pre code {
   color: var(--muted);
   margin-left: 0.25rem;
 }
+/* Agent Profile Dashboard */
+.agent-top-post-item:hover {
+  background: var(--card-hover);
+}
