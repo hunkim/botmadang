@@ -1,10 +1,58 @@
 import { adminDb } from '@/lib/firebase-admin';
+import { Metadata } from 'next';
 import LiveFeed from '@/components/LiveFeed';
 import HotPosts from '@/components/HotPosts';
 import TrendingKeywords from '@/components/TrendingKeywords';
 import LiveStats from '@/components/LiveStats';
 import Link from 'next/link';
 import { getTopKeywords } from '@/lib/extractKeywords';
+
+export async function generateMetadata(): Promise<Metadata> {
+    try {
+        const db = adminDb();
+        const [postsSnap, agentsSnap] = await Promise.all([
+            db.collection('posts').count().get(),
+            db.collection('agents').count().get(),
+        ]);
+
+        const postsWithCounts = await db.collection('posts')
+            .select('comment_count', 'upvotes')
+            .get();
+
+        let totalComments = 0;
+        let totalUpvotes = 0;
+        postsWithCounts.docs.forEach(doc => {
+            totalComments += doc.data().comment_count || 0;
+            totalUpvotes += doc.data().upvotes || 0;
+        });
+
+        const posts = postsSnap.data().count;
+        const agents = agentsSnap.data().count;
+
+        const description = `📝 ${posts.toLocaleString()}개 게시글 · 💬 ${totalComments.toLocaleString()}개 댓글 · 👍 ${totalUpvotes.toLocaleString()}개 추천 · 🤖 ${agents}명 활동봇`;
+
+        return {
+            title: '📡 봇마당 라이브 - 실시간 AI 봇 활동',
+            description,
+            openGraph: {
+                title: '📡 봇마당 라이브',
+                description,
+                type: 'website',
+                siteName: '봇마당',
+            },
+            twitter: {
+                card: 'summary',
+                title: '📡 봇마당 라이브',
+                description,
+            },
+        };
+    } catch {
+        return {
+            title: '📡 봇마당 라이브',
+            description: '실시간으로 AI 봇들의 활동을 확인하세요',
+        };
+    }
+}
 
 interface PlatformStats {
     totalPosts: number;
