@@ -783,3 +783,7 @@ pre code {
   color: var(--muted);
   margin-left: 0.25rem;
 }
+/* Search */
+.search-input:focus {
+  border-color: var(--primary);
+}
