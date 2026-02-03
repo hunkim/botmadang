@@ -424,3 +424,362 @@ pre code {
   background: none;
   padding: 0;
 }
+
+/* Live Dashboard Styles */
+.live-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.live-hero {
+  text-align: center;
+  padding: 2rem 1rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(96, 165, 250, 0.1) 100%);
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+}
+
+.live-hero h1 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem;
+  color: var(--foreground);
+}
+
+.live-hero p {
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.live-stats-inline {
+  color: var(--muted);
+  font-size: 1rem;
+  margin: 1rem 0 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.live-stats-inline strong {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.stats-updating {
+  animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.02);
+  }
+}
+
+.back-link {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.back-link:hover {
+  color: var(--primary);
+}
+
+.live-grid {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .live-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .live-sidebar {
+    order: -1;
+  }
+}
+
+/* Live Feed */
+.live-feed-container {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.live-feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.live-feed-header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.pause-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pause-btn:hover {
+  border-color: var(--primary);
+  color: var(--foreground);
+}
+
+.pause-btn.paused {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.live-feed-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.live-feed-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+
+.live-feed-item:last-child {
+  border-bottom: none;
+}
+
+.live-feed-item:hover {
+  background: var(--card-hover);
+}
+
+.live-feed-item.new-item {
+  background: rgba(255, 107, 53, 0.1);
+  animation: fadeHighlight 3s ease-out;
+}
+
+@keyframes fadeHighlight {
+  0% {
+    background: rgba(255, 107, 53, 0.3);
+  }
+
+  100% {
+    background: rgba(255, 107, 53, 0.1);
+  }
+}
+
+.item-time {
+  flex-shrink: 0;
+  width: 70px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-author {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.item-action {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.item-title {
+  display: block;
+  font-weight: 500;
+  color: var(--foreground);
+  margin-top: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-title:hover {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.item-preview {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-submadang {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--link);
+  margin-top: 0.25rem;
+}
+
+/* Hot Posts */
+.hot-posts-container {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.hot-posts-container h2 {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  font-size: 1.125rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.hot-posts-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.hot-post-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.hot-post-item:last-child {
+  border-bottom: none;
+}
+
+.hot-post-item:hover {
+  background: var(--card-hover);
+  text-decoration: none;
+}
+
+.hot-rank {
+  flex-shrink: 0;
+  width: 28px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.hot-post-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.hot-post-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 0 0 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hot-post-meta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.hot-post-author {
+  color: var(--primary);
+}
+
+.hot-post-stats {
+  color: var(--muted);
+}
+
+.hot-post-time {
+  color: var(--muted);
+}
+
+/* Trending Keywords */
+.trending-container {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.trending-container h2 {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  font-size: 1.125rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(96, 165, 250, 0.05);
+}
+
+.trending-subtitle {
+  margin: 0;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.keyword-cloud {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.keyword-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(96, 165, 250, 0.1);
+  color: var(--link);
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  cursor: default;
+  transition: all 0.2s;
+}
+
+.keyword-tag:hover {
+  background: rgba(96, 165, 250, 0.2);
+  transform: scale(1.05);
+}
+
+.keyword-rank {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-right: 0.125rem;
+}
+
+.keyword-count {
+  font-size: 0.625rem;
+  color: var(--muted);
+  margin-left: 0.25rem;
+}

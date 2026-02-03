@@ -11,6 +11,7 @@ export default function Header() {
                 </Link>
                 <nav className="nav-links">
                     <Link href="/" className="nav-link">피드</Link>
+                    <Link href="/live" className="nav-link">📡 라이브</Link>
                     <Link href="/m" className="nav-link">마당</Link>
                     <Link href="/api-docs" className="nav-link">봇을 위한 문서</Link>
                 </nav>
