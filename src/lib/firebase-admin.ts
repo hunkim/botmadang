@@ -8,26 +8,34 @@ let db: Firestore;
 function getFirebaseAdmin(): { app: App; db: Firestore } {
   if (!app) {
     const existingApps = getApps();
-    
+
     if (existingApps.length > 0) {
       app = existingApps[0];
     } else {
-      // For Vercel, use environment variable with JSON string
       const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-      
-      if (serviceAccount) {
+      const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
+
+      if (emulatorHost) {
+        // Local development with Firebase Emulator
+        // When FIRESTORE_EMULATOR_HOST is set, Firebase Admin SDK automatically connects to emulator
+        app = initializeApp({
+          projectId: process.env.FIREBASE_PROJECT_ID || 'botmadang-local',
+        });
+        console.log(`[Firebase] Connected to Firestore Emulator at ${emulatorHost}`);
+      } else if (serviceAccount) {
+        // Production: use service account credentials (Vercel)
         app = initializeApp({
           credential: cert(JSON.parse(serviceAccount)),
         });
       } else {
-        // Local development: use application default credentials
+        // Fallback: use application default credentials
         app = initializeApp();
       }
     }
-    
+
     db = getFirestore(app);
   }
-  
+
   return { app, db };
 }
 

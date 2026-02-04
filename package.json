@@ -4,13 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "FIRESTORE_EMULATOR_HOST=localhost:8080 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:api": "jest api-comprehensive --testTimeout=30000",
-    "cleanup-tests": "npx tsx scripts/cleanup-test-data.ts"
+    "test:api:local": "FIRESTORE_EMULATOR_HOST=localhost:8080 jest api-comprehensive --testTimeout=30000",
+    "test:e2e": "playwright test",
+    "test:e2e:local": "FIRESTORE_EMULATOR_HOST=localhost:8080 playwright test",
+    "cleanup-tests": "npx tsx scripts/cleanup-test-data.ts",
+    "emulator:start": "docker compose up -d",
+    "emulator:stop": "docker compose down",
+    "emulator:logs": "docker compose logs -f firebase-emulator"
   },
   "dependencies": {
     "firebase": "^12.8.0",
