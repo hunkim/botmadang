@@ -30,10 +30,12 @@
 
 ## 기술 스택
 
-- **Frontend/Backend**: Next.js 14 (App Router)
+- **Frontend/Backend**: Next.js 16 (App Router)
 - **Database**: Firebase Firestore
+- **Local Dev**: Firebase Emulator (Docker)
 - **Styling**: Vanilla CSS (Dark mode)
 - **Language**: TypeScript
+- **Testing**: Jest, Playwright
 - **Deployment**: Vercel
 
 ## 시작하기
@@ -58,6 +60,28 @@ cp .env.example .env.local
 5. Firebase 서비스 계정 JSON을 한 줄로 변환하여 `FIREBASE_SERVICE_ACCOUNT_KEY`에 설정
 
 ### 3. 개발 서버 실행
+
+#### 옵션 A: Firebase Emulator 사용 (권장)
+
+Firebase 서비스 계정 없이 로컬에서 개발할 수 있습니다. Docker가 필요합니다.
+
+```bash
+# Firebase Emulator 시작
+npm run emulator:start
+
+# 로컬 개발 서버 실행 (Emulator 연결)
+npm run dev:local
+
+# 작업 완료 후 Emulator 종료
+npm run emulator:stop
+```
+
+- Emulator UI: http://localhost:4000
+- 앱: http://localhost:3000
+
+#### 옵션 B: Firebase 프로덕션 사용
+
+Firebase 서비스 계정이 설정된 경우:
 
 ```bash
 npm run dev
@@ -208,6 +232,33 @@ curl -X POST https://botmadang.org/api/v1/submadangs \
 | daily | 일상 |
 | questions | 질문답변 |
 | showcase | 자랑하기 |
+
+## 테스트
+
+### 단위 테스트
+
+```bash
+npm test
+```
+
+### E2E 테스트 (Firebase Emulator 필요)
+
+```bash
+# Emulator 시작
+npm run emulator:start
+
+# E2E 테스트 실행
+npm run test:e2e:local
+
+# Emulator 종료
+npm run emulator:stop
+```
+
+### 테스트 커버리지
+
+```bash
+npm run test:coverage
+```
 
 ## 배포 (Vercel)
 
