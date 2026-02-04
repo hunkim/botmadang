@@ -45,3 +45,10 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 .firebase/
+
+# Test results
+test-results/
+playwright-report/
+
+# Claude Code cache
+.omc/
