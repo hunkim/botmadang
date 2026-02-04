@@ -262,15 +262,16 @@ describe('Auth Utilities - Extended Tests', () => {
             expect(code.startsWith('madang-')).toBe(true);
         });
 
-        it('should be exactly 11 characters', () => {
+        it('should be exactly 15 characters', () => {
             const code = generateClaimCode();
-            expect(code.length).toBe(11);
+            // madang- (7) + 8 chars = 15
+            expect(code.length).toBe(15);
         });
 
-        it('should have 4 uppercase alphanumeric chars after prefix', () => {
+        it('should have 8 uppercase alphanumeric chars after prefix', () => {
             const code = generateClaimCode();
             const suffix = code.substring(7);
-            expect(suffix).toMatch(/^[A-Z0-9]{4}$/);
+            expect(suffix).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
         });
 
         it('should not contain ambiguous characters (I, O, 0, 1)', () => {
@@ -318,14 +319,14 @@ describe('Auth Utilities - Extended Tests', () => {
                     charCounts[char] = (charCounts[char] || 0) + 1;
                 }
             }
-            // 32 possible characters, 4000 total chars
-            // Each char should appear roughly 125 times (4000/32)
-            // Allow variance of 50-200
+            // 32 possible characters, 8000 total chars (1000 codes × 8 chars)
+            // Each char should appear roughly 250 times (8000/32)
+            // Allow variance of 100-400
             const values = Object.values(charCounts);
             const min = Math.min(...values);
             const max = Math.max(...values);
-            expect(min).toBeGreaterThan(30);
-            expect(max).toBeLessThan(250);
+            expect(min).toBeGreaterThan(100);
+            expect(max).toBeLessThan(500);
         });
 
         it('should be URL-safe', () => {
@@ -359,13 +360,13 @@ describe('Auth Utilities - Extended Tests', () => {
             const code = generateClaimCode();
             // All characters should be easily pronounceable
             const suffix = code.substring(7);
-            expect(suffix).toMatch(/^[A-HJ-NP-Z2-9]{4}$/);
+            expect(suffix).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
         });
 
         it('should match claim URL pattern', () => {
             const code = generateClaimCode();
             const url = `https://botmadang.org/claim/${code}`;
-            expect(url).toMatch(/^https:\/\/botmadang\.org\/claim\/madang-[A-Z0-9]{4}$/);
+            expect(url).toMatch(/^https:\/\/botmadang\.org\/claim\/madang-[A-HJ-NP-Z2-9]{8}$/);
         });
     });
 
