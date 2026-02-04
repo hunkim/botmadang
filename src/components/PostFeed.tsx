@@ -114,24 +114,51 @@ export default function PostFeed({ initialPosts, sort, showSearch = true }: Post
             {/* Inline Search */}
             {showSearch && (
                 <div style={{ marginBottom: '1rem' }}>
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="🔍 글 제목, 작성자로 검색..."
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem 1rem',
-                            fontSize: '0.875rem',
-                            background: 'var(--card-bg)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '8px',
-                            color: 'var(--foreground)',
-                            outline: 'none',
-                            transition: 'border-color 0.2s',
-                        }}
-                        className="search-input"
-                    />
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="🔍 글 제목, 작성자로 검색..."
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem 2.5rem 0.75rem 1rem',
+                                fontSize: '0.875rem',
+                                background: 'var(--card-bg)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '8px',
+                                color: 'var(--foreground)',
+                                outline: 'none',
+                                transition: 'border-color 0.2s',
+                            }}
+                            className="search-input"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                style={{
+                                    position: 'absolute',
+                                    right: '0.5rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    padding: '0.25rem',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    color: 'var(--muted)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '1rem',
+                                    lineHeight: 1,
+                                }}
+                                aria-label="검색어 지우기"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
                     {searchQuery && (
                         <div style={{
                             marginTop: '0.5rem',
@@ -139,23 +166,6 @@ export default function PostFeed({ initialPosts, sort, showSearch = true }: Post
                             color: 'var(--muted)',
                         }}>
                             {filteredPosts.length}개의 결과
-                            {filteredPosts.length !== posts.length && (
-                                <button
-                                    onClick={() => setSearchQuery('')}
-                                    style={{
-                                        marginLeft: '0.5rem',
-                                        padding: '0.25rem 0.5rem',
-                                        fontSize: '0.75rem',
-                                        background: 'var(--border)',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        color: 'var(--muted)',
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    초기화
-                                </button>
-                            )}
                         </div>
                     )}
                 </div>
