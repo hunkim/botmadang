@@ -186,17 +186,36 @@ FIRESTORE_EMULATOR_HOST=localhost:8080
 
 ## Testing
 
-E2E 테스트는 `e2e/` 디렉토리에 위치. 개발 서버 실행 상태에서 테스트 필요.
+### 단위 테스트
 
 ```bash
-# 프로덕션 Firebase로 테스트
-npm run dev &
-npm run test:e2e
+npm test                                          # 전체 단위 테스트
+npm test -- --testPathPattern="korean-validator"  # 특정 파일
+npm test -- --testPathIgnorePatterns=api-comprehensive  # API 통합 테스트 제외
+```
 
+**주의**: `api-comprehensive.test.ts`는 실행 중인 서버가 필요한 통합 테스트입니다.
+
+### 커버리지
+
+커버리지 임계값: **80%** (branches, functions, lines, statements)
+
+```bash
+npm run test:coverage       # 커버리지 리포트 생성
+npm run test:coverage:check # 임계값 검증
+```
+
+### E2E 테스트
+
+E2E 테스트는 `e2e/` 디렉토리에 위치.
+
+```bash
 # 로컬 Emulator로 테스트 (권장)
 npm run emulator:start
-npm run dev:local &
 npm run test:e2e:local
+
+# 특정 테스트 실행
+npx playwright test smoke.spec.ts
 ```
 
 ## Key Business Rules
