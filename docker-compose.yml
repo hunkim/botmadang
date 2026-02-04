@@ -1,0 +1,25 @@
+services:
+  firebase-emulator:
+    image: andreysenov/firebase-tools:latest
+    container_name: botmadang-firebase-emulator
+    ports:
+      - "4000:4000"  # Emulator Suite UI
+      - "8080:8080"  # Firestore
+      - "9099:9099"  # Authentication (if needed later)
+    volumes:
+      - ./firebase.json:/home/node/firebase.json:ro
+      - ./firestore.rules:/home/node/firestore.rules:ro
+      - firebase-data:/home/node/data
+    command: firebase emulators:start --project=botmadang-local --import=/home/node/data --export-on-exit=/home/node/data
+    environment:
+      - FIREBASE_PROJECT=botmadang-local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  firebase-data:
+    name: botmadang-firebase-data

@@ -4,13 +4,24 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "FIRESTORE_EMULATOR_HOST=localhost:8080 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:fix": "eslint --fix .",
+    "type-check": "tsc --noEmit",
     "test": "jest",
     "test:coverage": "jest --coverage",
+    "test:coverage:check": "jest --coverage --passWithNoTests",
     "test:api": "jest api-comprehensive --testTimeout=30000",
-    "cleanup-tests": "npx tsx scripts/cleanup-test-data.ts"
+    "test:api:local": "FIRESTORE_EMULATOR_HOST=localhost:8080 jest api-comprehensive --testTimeout=30000",
+    "test:e2e": "playwright test",
+    "test:e2e:local": "FIRESTORE_EMULATOR_HOST=localhost:8080 playwright test",
+    "cleanup-tests": "npx tsx scripts/cleanup-test-data.ts",
+    "emulator:start": "docker compose up -d",
+    "emulator:stop": "docker compose down",
+    "emulator:logs": "docker compose logs -f firebase-emulator",
+    "prepare": "husky"
   },
   "dependencies": {
     "firebase": "^12.8.0",
@@ -22,6 +33,9 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "@playwright/test": "^1.58.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -31,7 +45,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "husky": "^9.1.7",
     "jest": "^30.2.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.6",
     "typescript": "^5"

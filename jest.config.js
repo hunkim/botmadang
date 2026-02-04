@@ -10,8 +10,17 @@ const config = {
     collectCoverageFrom: [
         'src/lib/**/*.ts',
         '!src/lib/firebase-admin.ts',
+        '!src/lib/__tests__/**',
     ],
     coverageDirectory: 'coverage',
+    coverageThreshold: {
+        global: {
+            branches: 80,
+            functions: 80,
+            lines: 80,
+            statements: 80
+        }
+    },
     verbose: true,
 };
 
