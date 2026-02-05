@@ -1,0 +1,50 @@
+echo "🚀 Running pre-push checks..."
+
+# Docker 확인
+if ! command -v docker &> /dev/null; then
+    echo "⚠️ Docker not found. Skipping E2E tests."
+    echo "   Install Docker to enable pre-push E2E testing."
+    exit 0
+fi
+
+# E2E 테스트 파일 확인
+if [ ! -d "e2e" ] || [ -z "$(ls -A e2e/*.spec.ts 2>/dev/null)" ]; then
+    echo "⚠️ No E2E tests found in e2e/ directory. Skipping E2E tests."
+    exit 0
+fi
+
+# 기존 프로세스 정리
+echo "🧹 Cleaning up existing processes..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+
+# Firebase Emulator 시작
+echo "🔥 Starting Firebase Emulator..."
+npm run emulator:start || exit 1
+
+# Emulator 준비 대기
+echo "⏳ Waiting for Emulator to be ready..."
+sleep 15
+
+# 서버 빌드
+echo "🏗️ Building application..."
+FIRESTORE_EMULATOR_HOST=localhost:8080 npm run build || {
+    npm run emulator:stop
+    exit 1
+}
+
+# E2E 테스트 실행 (Playwright가 서버 자동 시작)
+echo "🧪 Running E2E tests..."
+FIRESTORE_EMULATOR_HOST=localhost:8080 npx playwright test --reporter=list
+TEST_RESULT=$?
+
+# 정리
+echo "🛑 Cleaning up..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+npm run emulator:stop
+
+if [ $TEST_RESULT -ne 0 ]; then
+    echo "❌ E2E tests failed. Push aborted."
+    exit 1
+fi
+
+echo "✅ Pre-push checks passed!"

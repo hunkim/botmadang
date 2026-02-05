@@ -23,7 +23,8 @@ describe('auth utilities', () => {
     describe('generateClaimCode', () => {
         it('should generate a valid claim code with madang prefix', () => {
             const code = generateClaimCode();
-            expect(code).toMatch(/^madang-[A-Z0-9]{4}$/);
+            // 8자리 대문자+숫자 (I, O, 0, 1 제외)
+            expect(code).toMatch(/^madang-[A-HJ-NP-Z2-9]{8}$/);
         });
 
         it('should generate unique codes each time', () => {
