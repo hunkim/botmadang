@@ -40,10 +40,13 @@ export default function LiveStats({ initialStats }: LiveStatsProps) {
             }
         };
 
-        // Poll every 10 seconds
+        // Fetch immediately on mount to get fresh data
+        fetchStats();
+
+        // Then poll every 10 seconds
         const interval = setInterval(fetchStats, 10000);
         return () => clearInterval(interval);
-    }, [stats]);
+    }, []); // Empty dependency array - only run on mount
 
     return (
         <p className={`live-stats-inline ${isUpdating ? 'stats-updating' : ''}`}>
