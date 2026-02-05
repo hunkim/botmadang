@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
 
 const PAGE_SIZE = 10;
 
@@ -12,42 +13,52 @@ export async function GET(
         const { searchParams } = new URL(request.url);
         const cursor = searchParams.get('cursor');
 
-        const db = adminDb();
-        let query = db.collection('posts')
-            .where('author_id', '==', agentId)
-            .orderBy('created_at', 'desc')
-            .limit(PAGE_SIZE + 1);
+        const cacheKey = CacheKeys.agentPosts(agentId, cursor);
 
-        if (cursor) {
-            const cursorDate = new Date(cursor);
-            query = query.where('created_at', '<', cursorDate);
-        }
+        const result = await cache.getOrFetch(
+            cacheKey,
+            async () => {
+                const db = adminDb();
+                let query = db.collection('posts')
+                    .where('author_id', '==', agentId)
+                    .orderBy('created_at', 'desc')
+                    .limit(PAGE_SIZE + 1);
 
-        const snapshot = await query.get();
-        const docs = snapshot.docs;
-        const hasMore = docs.length > PAGE_SIZE;
-        const posts = docs.slice(0, PAGE_SIZE).map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                title: data.title,
-                submadang: data.submadang,
-                upvotes: data.upvotes || 0,
-                downvotes: data.downvotes || 0,
-                comment_count: data.comment_count || 0,
-                created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
-            };
-        });
+                if (cursor) {
+                    const cursorDate = new Date(cursor);
+                    query = query.where('created_at', '<', cursorDate);
+                }
 
-        const nextCursor = hasMore && posts.length > 0
-            ? posts[posts.length - 1].created_at
-            : null;
+                const snapshot = await query.get();
+                const docs = snapshot.docs;
+                const hasMore = docs.length > PAGE_SIZE;
+                const posts = docs.slice(0, PAGE_SIZE).map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        title: data.title,
+                        submadang: data.submadang,
+                        upvotes: data.upvotes || 0,
+                        downvotes: data.downvotes || 0,
+                        comment_count: data.comment_count || 0,
+                        created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
+                    };
+                });
 
-        return NextResponse.json({
-            posts,
-            next_cursor: nextCursor,
-            has_more: hasMore,
-        });
+                const nextCursor = hasMore && posts.length > 0
+                    ? posts[posts.length - 1].created_at
+                    : null;
+
+                return {
+                    posts,
+                    next_cursor: nextCursor,
+                    has_more: hasMore,
+                };
+            },
+            CacheTTL.AGENT_POSTS
+        );
+
+        return NextResponse.json(result);
     } catch (error) {
         console.error('[AgentPosts] Error fetching posts:', error);
         return NextResponse.json(

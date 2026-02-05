@@ -3,6 +3,7 @@ import { authenticateAgent, unauthorizedResponse, successResponse, errorResponse
 import { adminDb } from '@/lib/firebase-admin';
 import { validateKoreanContent } from '@/lib/korean-validator';
 import { generateId } from '@/lib/auth';
+import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
 
 /**
  * GET /api/v1/posts
@@ -21,63 +22,74 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(isNaN(parsedLimit) ? 25 : parsedLimit, 1), 50);
 
     try {
-        const db = adminDb();
-        let query = db.collection('posts') as FirebaseFirestore.Query;
+        const cacheKey = CacheKeys.postsList(submadang, sort, cursor, limit);
 
-        if (submadang) {
-            query = query.where('submadang', '==', submadang);
-        }
+        const result = await cache.getOrFetch(
+            cacheKey,
+            async () => {
+                const db = adminDb();
+                let query = db.collection('posts') as FirebaseFirestore.Query;
 
-        // Sorting
-        switch (sort) {
-            case 'new':
-                query = query.orderBy('created_at', 'desc');
-                break;
-            case 'top':
-                query = query.orderBy('upvotes', 'desc');
-                break;
-            case 'hot':
-            default:
-                // Hot = combination of upvotes and recency
-                query = query.orderBy('created_at', 'desc');
-                break;
-        }
+                if (submadang) {
+                    query = query.where('submadang', '==', submadang);
+                }
 
-        // Apply cursor-based pagination
-        if (cursor) {
-            const cursorDoc = await db.collection('posts').doc(cursor).get();
-            if (cursorDoc.exists) {
-                query = query.startAfter(cursorDoc);
-            }
-        }
+                // Sorting
+                switch (sort) {
+                    case 'new':
+                        query = query.orderBy('created_at', 'desc');
+                        break;
+                    case 'top':
+                        query = query.orderBy('upvotes', 'desc');
+                        break;
+                    case 'hot':
+                    default:
+                        // Hot = combination of upvotes and recency
+                        query = query.orderBy('created_at', 'desc');
+                        break;
+                }
 
-        // Fetch limit + 1 to determine if there are more results
-        query = query.limit(limit + 1);
+                // Apply cursor-based pagination
+                if (cursor) {
+                    const cursorDoc = await db.collection('posts').doc(cursor).get();
+                    if (cursorDoc.exists) {
+                        query = query.startAfter(cursorDoc);
+                    }
+                }
 
-        const snapshot = await query.get();
-        const allPosts = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
-        }));
+                // Fetch limit + 1 to determine if there are more results
+                query = query.limit(limit + 1);
 
-        // Check if there are more results
-        const hasMore = allPosts.length > limit;
-        const posts = hasMore ? allPosts.slice(0, limit) : allPosts;
-        const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+                const snapshot = await query.get();
+                const allPosts = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
+                }));
 
-        return successResponse({
-            posts,
-            count: posts.length,
-            next_cursor: nextCursor,
-            has_more: hasMore,
-        });
+                // Check if there are more results
+                const hasMore = allPosts.length > limit;
+                const posts = hasMore ? allPosts.slice(0, limit) : allPosts;
+                const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+
+                return {
+                    posts,
+                    count: posts.length,
+                    next_cursor: nextCursor,
+                    has_more: hasMore,
+                };
+            },
+            CacheTTL.POSTS_LIST
+        );
+
+        return successResponse(result);
 
     } catch (error) {
         console.error('Get posts error:', error);
         return errorResponse('서버 오류가 발생했습니다.', 500);
     }
 }
+
 
 /**
  * POST /api/v1/posts
@@ -186,6 +198,9 @@ export async function POST(request: NextRequest) {
         };
 
         await db.collection('posts').doc(postId).set(postData);
+
+        // Invalidate posts cache since new post was created
+        cache.invalidate('posts:');
 
         // Update agent karma
         await db.collection('agents').doc(agent.id).update({

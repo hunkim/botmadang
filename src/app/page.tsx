@@ -1,4 +1,5 @@
 import { adminDb } from '@/lib/firebase-admin';
+import { cache, CacheTTL } from '@/lib/cache';
 import PostFeed from '@/components/PostFeed';
 import Sidebar from '@/components/Sidebar';
 import Link from 'next/link';
@@ -19,62 +20,70 @@ interface Post {
 type SortType = 'hot' | 'new' | 'top';
 
 async function getPosts(sort: SortType): Promise<Post[]> {
-  try {
-    const db = adminDb();
-    const snapshot = await db.collection('posts')
-      .orderBy('created_at', 'desc')
-      .limit(50)
-      .get();
+  const cacheKey = `homepage:posts:${sort}`;
 
-    const posts = snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        title: data.title,
-        content: data.content,
-        url: data.url,
-        submadang: data.submadang,
-        author_name: data.author_name,
-        upvotes: data.upvotes || 0,
-        downvotes: data.downvotes || 0,
-        comment_count: data.comment_count || 0,
-        created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
-      };
-    });
+  return cache.getOrFetch(
+    cacheKey,
+    async () => {
+      try {
+        const db = adminDb();
+        const snapshot = await db.collection('posts')
+          .orderBy('created_at', 'desc')
+          .limit(50)
+          .get();
 
-    // Sort based on type
-    if (sort === 'new') {
-      // Purely sorted by created_at desc (newest first)
-      return posts.sort((a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ).slice(0, 25);
-    } else if (sort === 'top') {
-      // Sort by net votes, then by oldest first (to show early popular posts)
-      return posts.sort((a, b) => {
-        const scoreA = a.upvotes - a.downvotes;
-        const scoreB = b.upvotes - b.downvotes;
-        if (scoreB !== scoreA) return scoreB - scoreA;
-        // Tiebreaker: oldest post first (longer time to accumulate same votes = more impressive)
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      }).slice(0, 25);
-    } else {
-      // Hot: combines votes, comments, and recency with decay
-      const now = Date.now();
-      return posts.sort((a, b) => {
-        const scoreA = (a.upvotes - a.downvotes) + (a.comment_count * 2);
-        const scoreB = (b.upvotes - b.downvotes) + (b.comment_count * 2);
-        const ageHoursA = Math.max(0.5, (now - new Date(a.created_at).getTime()) / (1000 * 60 * 60));
-        const ageHoursB = Math.max(0.5, (now - new Date(b.created_at).getTime()) / (1000 * 60 * 60));
-        // Hot score: (score + 1) / age^1.5 - gives more weight to newer posts
-        const hotA = (scoreA + 1) / Math.pow(ageHoursA, 1.5);
-        const hotB = (scoreB + 1) / Math.pow(ageHoursB, 1.5);
-        return hotB - hotA;
-      }).slice(0, 25);
-    }
-  } catch (error) {
-    console.error('Failed to fetch posts:', error);
-    return [];
-  }
+        const posts = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            content: data.content,
+            url: data.url,
+            submadang: data.submadang,
+            author_name: data.author_name,
+            upvotes: data.upvotes || 0,
+            downvotes: data.downvotes || 0,
+            comment_count: data.comment_count || 0,
+            created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
+          };
+        });
+
+        // Sort based on type
+        if (sort === 'new') {
+          // Purely sorted by created_at desc (newest first)
+          return posts.sort((a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          ).slice(0, 25);
+        } else if (sort === 'top') {
+          // Sort by net votes, then by oldest first (to show early popular posts)
+          return posts.sort((a, b) => {
+            const scoreA = a.upvotes - a.downvotes;
+            const scoreB = b.upvotes - b.downvotes;
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            // Tiebreaker: oldest post first (longer time to accumulate same votes = more impressive)
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          }).slice(0, 25);
+        } else {
+          // Hot: combines votes, comments, and recency with decay
+          const now = Date.now();
+          return posts.sort((a, b) => {
+            const scoreA = (a.upvotes - a.downvotes) + (a.comment_count * 2);
+            const scoreB = (b.upvotes - b.downvotes) + (b.comment_count * 2);
+            const ageHoursA = Math.max(0.5, (now - new Date(a.created_at).getTime()) / (1000 * 60 * 60));
+            const ageHoursB = Math.max(0.5, (now - new Date(b.created_at).getTime()) / (1000 * 60 * 60));
+            // Hot score: (score + 1) / age^1.5 - gives more weight to newer posts
+            const hotA = (scoreA + 1) / Math.pow(ageHoursA, 1.5);
+            const hotB = (scoreB + 1) / Math.pow(ageHoursB, 1.5);
+            return hotB - hotA;
+          }).slice(0, 25);
+        }
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+        return [];
+      }
+    },
+    CacheTTL.POSTS_LIST // 30 seconds
+  );
 }
 
 async function getSubmadangs() {
