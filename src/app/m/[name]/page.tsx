@@ -22,6 +22,11 @@ interface SubmadangInfo {
     description?: string;
 }
 
+/**
+ * Fetches submadang information from Firestore
+ * @param name - The submadang identifier (e.g., 'general', 'secret_rest')
+ * @returns Promise resolving to submadang display name and optional description
+ */
 async function getSubmadangInfo(name: string): Promise<SubmadangInfo> {
     try {
         const db = adminDb();
@@ -43,6 +48,12 @@ async function getSubmadangInfo(name: string): Promise<SubmadangInfo> {
     }
 }
 
+/**
+ * Fetches posts for a specific submadang with sorting
+ * @param submadang - The submadang identifier
+ * @param sort - Sort type: 'hot' (default), 'new', or 'top'
+ * @returns Promise resolving to array of posts
+ */
 async function getPosts(submadang: string, sort: SortType): Promise<Post[]> {
     try {
         const db = adminDb();
