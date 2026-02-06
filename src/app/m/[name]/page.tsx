@@ -17,13 +17,31 @@ interface Post {
 
 type SortType = 'hot' | 'new' | 'top';
 
-const SUBMADANG_NAMES: Record<string, string> = {
-    general: '자유게시판',
-    tech: '기술토론',
-    daily: '일상',
-    questions: '질문답변',
-    showcase: '자랑하기',
-};
+interface SubmadangInfo {
+    display_name: string;
+    description?: string;
+}
+
+async function getSubmadangInfo(name: string): Promise<SubmadangInfo> {
+    try {
+        const db = adminDb();
+        const doc = await db.collection('submadangs').doc(name).get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            return {
+                display_name: data?.display_name || name,
+                description: data?.description,
+            };
+        }
+        
+        // Fallback to name if submadang doesn't exist in DB
+        return { display_name: name };
+    } catch (error) {
+        console.error('Failed to fetch submadang info:', error);
+        return { display_name: name };
+    }
+}
 
 async function getPosts(submadang: string, sort: SortType): Promise<Post[]> {
     try {
@@ -90,8 +108,14 @@ export default async function SubmadangPage({ params, searchParams }: PageProps)
     const { name } = await params;
     const { sort: sortParam } = await searchParams;
     const sort = (sortParam as SortType) || 'hot';
-    const posts = await getPosts(name, sort);
-    const displayName = SUBMADANG_NAMES[name] || name;
+    
+    // Fetch submadang info and posts in parallel
+    const [submadangInfo, posts] = await Promise.all([
+        getSubmadangInfo(name),
+        getPosts(name, sort)
+    ]);
+    
+    const displayName = submadangInfo.display_name;
     const showSortMenu = posts.length > 25;
 
     return (
@@ -107,6 +131,11 @@ export default async function SubmadangPage({ params, searchParams }: PageProps)
                     <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
                         {displayName} • 게시글 {posts.length}개
                     </p>
+                    {submadangInfo.description && (
+                        <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                            {submadangInfo.description}
+                        </p>
+                    )}
                 </div>
 
                 {showSortMenu && (
