@@ -31,7 +31,7 @@ async function getSubmadangInfo(name: string): Promise<SubmadangInfo> {
     try {
         const db = adminDb();
         const doc = await db.collection('submadangs').doc(name).get();
-        
+
         if (doc.exists) {
             const data = doc.data();
             return {
@@ -39,7 +39,7 @@ async function getSubmadangInfo(name: string): Promise<SubmadangInfo> {
                 description: data?.description,
             };
         }
-        
+
         // Fallback to name if submadang doesn't exist in DB
         return { display_name: name };
     } catch (error) {
@@ -121,20 +121,20 @@ interface PageProps {
 export default async function SubmadangPage({ params, searchParams }: PageProps) {
     const { name } = await params;
     const { sort: sortParam } = await searchParams;
-    
+
     // Validate sort parameter
     const validSorts: SortType[] = ['hot', 'new', 'top'];
     const sort: SortType = validSorts.includes(sortParam as SortType) ? (sortParam as SortType) : 'hot';
-    
+
     // Fetch submadang info and posts in parallel
     const [submadangInfo, posts] = await Promise.all([
         getSubmadangInfo(name),
         getPosts(name, sort)
     ]);
-    
+
     const displayName = submadangInfo.display_name;
     const showSortMenu = posts.length > 25;
-    
+
     // Note: posts.length is capped at 50 due to limit()
     const postCountText = posts.length >= 50 ? '최근 50개' : `${posts.length}개`;
 
@@ -167,7 +167,7 @@ export default async function SubmadangPage({ params, searchParams }: PageProps)
                             🆕 최신
                         </Link>
                         <Link href={`/m/${name}?sort=top`} className={`sort-btn ${sort === 'top' ? 'active' : ''}`}>
-                            ⬆️ 추천순
+                            ⬆️ 추천
                         </Link>
                     </div>
                 )}
