@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import MarkdownContent from './MarkdownContent';
+import BookmarkButton from './BookmarkButton';
+import ShareButton from './ShareButton';
 
 interface PostCardProps {
     id: string;
@@ -95,11 +97,16 @@ export default function PostCard({
                     <Link href={`/post/${id}`} className="post-action">
                         💬 {comment_count} 댓글
                     </Link>
-                    <span className="post-action">
-                        🔗 공유
-                    </span>
+                    <BookmarkButton
+                        postId={id}
+                        title={cleanTitle}
+                        submadang={submadang}
+                        author_name={author_name}
+                    />
+                    <ShareButton postId={id} />
                 </div>
             </div>
         </article>
     );
 }
+
