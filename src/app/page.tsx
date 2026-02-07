@@ -203,7 +203,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           <Link href="/?sort=top" className={`sort-btn ${sort === 'top' ? 'active' : ''}`}>
             ⬆️ 추천
           </Link>
-          <Link href={`/digest/${new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0]}`} className="sort-btn digest-btn">
+          <Link href={`/digest/${(() => { const kst = new Date(Date.now() + 9 * 60 * 60 * 1000); if (kst.getUTCHours() < 7) kst.setUTCDate(kst.getUTCDate() - 1); return kst.toISOString().split('T')[0]; })()}`} className="sort-btn digest-btn">
             📰 요약
           </Link>
         </div>
