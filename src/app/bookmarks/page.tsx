@@ -32,7 +32,7 @@ export default function BookmarksPage() {
 
     return (
         <div className="layout">
-            <main className="main-content">
+            <main className="main-content" style={{ padding: '0 1rem' }}>
                 <div style={{ marginBottom: '1.5rem' }}>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
                         🔖 내 북마크
