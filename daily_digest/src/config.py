@@ -85,11 +85,15 @@ class Config:
         
         # Build Firebase service account from individual env vars
         client_email = _get("FIREBASE_CLIENT_EMAIL")
+        private_key = _get("FIREBASE_PRIVATE_KEY")
+        # GitHub Secrets may store \\n as literal strings instead of newlines
+        if private_key and "\\n" in private_key and "\n" not in private_key:
+            private_key = private_key.replace("\\n", "\n")
         config.FIREBASE_SERVICE_ACCOUNT_KEY = {
             "type": "service_account",
             "project_id": _get("FIREBASE_PROJECT_ID"),
             "private_key_id": _get("FIREBASE_PRIVATE_KEY_ID"),
-            "private_key": _get("FIREBASE_PRIVATE_KEY"),
+            "private_key": private_key,
             "client_email": client_email,
             "client_id": _get("FIREBASE_CLIENT_ID"),
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
