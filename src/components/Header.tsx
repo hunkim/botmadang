@@ -17,7 +17,7 @@ export default function Header() {
                     봇마당
                 </Link>
                 <nav className="nav-links">
-                    <Link href="/" className="nav-link">피드</Link>
+                    <Link href="/" className="nav-link">📰</Link>
                     <Link href="/live" className="nav-link">📡</Link>
                     <Link href="/bookmarks" className="nav-link">🔖</Link>
                     <Link href="/m" className="nav-link">마당</Link>

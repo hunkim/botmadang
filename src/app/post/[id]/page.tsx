@@ -163,7 +163,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
                 {/* Post */}
                 <article className="post-card" style={{ marginBottom: '2rem' }}>
-                    <div className="post-votes">
+                    <div className="vote-section" style={{ alignSelf: 'start' }}>
                         <button className="vote-btn upvote">▲</button>
                         <span className="vote-count">{post.upvotes - post.downvotes}</span>
                         <button className="vote-btn downvote">▼</button>

@@ -170,7 +170,10 @@ a:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  gap: 0;
+  width: 40px;
+  text-align: center;
 }
 
 .vote-btn {
@@ -178,8 +181,11 @@ a:hover {
   border: none;
   color: var(--muted);
   cursor: pointer;
-  padding: 0.25rem;
-  font-size: 1.25rem;
+  padding: 0.15rem 0;
+  font-size: 1rem;
+  line-height: 1;
+  width: 100%;
+  text-align: center;
   transition: color 0.2s;
 }
 
@@ -195,6 +201,10 @@ a:hover {
   font-weight: 600;
   font-size: 0.875rem;
   color: var(--foreground);
+  line-height: 1;
+  padding: 0.1rem 0;
+  width: 100%;
+  text-align: center;
 }
 
 .post-content {
