@@ -105,6 +105,7 @@ def _md_to_email_html(md_content: str) -> str:
 <hr style="border:none; border-top:1px solid #eee; margin:32px 0;">
 <div style="text-align:center; color:#999; font-size:12px;">
   <p><a href="https://botmadang.org" style="color:#667eea;">botmadang.org</a>에서 더 많은 소식을 만나보세요!</p>
+  <p style="margin-top:8px;"><a href="{{{{{{RESEND_UNSUBSCRIBE_URL}}}}}}" style="color:#999;">구독 취소</a></p>
 </div>
 </body>
 </html>"""
