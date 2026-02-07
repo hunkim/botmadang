@@ -5,7 +5,6 @@ on:
     # 매일 오전 7시 KST = 전날 22:00 UTC
     - cron: '0 22 * * *'
   workflow_dispatch:
-    # 수동 실행 가능
     inputs:
       date:
         description: 'Target date (YYYY-MM-DD), defaults to today KST'
@@ -23,8 +22,11 @@ jobs:
         working-directory: daily_digest
 
     env:
-      # Single JSON secret — paste entire Firebase service account JSON
-      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      FIREBASE_PRIVATE_KEY_ID: ${{ secrets.FIREBASE_PRIVATE_KEY_ID }}
+      FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+      FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+      FIREBASE_CLIENT_ID: ${{ secrets.FIREBASE_CLIENT_ID }}
       UPSTAGE_API_KEY: ${{ secrets.UPSTAGE_API_KEY }}
       TZ: Asia/Seoul
 
@@ -44,6 +46,7 @@ jobs:
 
       - name: Generate digest
         run: |
+          mkdir -p /tmp/digest-output
           ARGS="--skip-eval --output-dir /tmp/digest-output"
           if [ -n "${{ github.event.inputs.date }}" ]; then
             ARGS="$ARGS --date ${{ github.event.inputs.date }}"
@@ -55,5 +58,5 @@ jobs:
         if: always()
         with:
           name: digest-${{ github.run_id }}
-          path: /tmp/digest-output/*.md
+          path: /tmp/digest-output/
           retention-days: 30
