@@ -1,4 +1,5 @@
 """Configuration management for Daily Digest."""
+import json
 import os
 from pathlib import Path
 
@@ -75,36 +76,49 @@ class Config:
     def load(cls) -> "Config":
         """Load configuration from environment.
         
-        Priority: .env.local file > os.environ
-        This allows both local dev (.env.local) and CI (GitHub Actions secrets).
+        Firebase auth priority:
+        1. FIREBASE_SERVICE_ACCOUNT_JSON env var (for CI - single JSON string)
+        2. Individual FIREBASE_* env vars from .env.local (for local dev)
         """
         config = cls()
         
         def _get(key: str, default: str = "") -> str:
             return _env_cache.get(key) or os.getenv(key, default)
         
-        # Build Firebase service account from individual env vars
-        client_email = _get("FIREBASE_CLIENT_EMAIL")
-        private_key = _get("FIREBASE_PRIVATE_KEY")
-        # GitHub Secrets may store \\n as literal strings instead of newlines
-        if private_key and "\\n" in private_key and "\n" not in private_key:
-            private_key = private_key.replace("\\n", "\n")
-        config.FIREBASE_SERVICE_ACCOUNT_KEY = {
-            "type": "service_account",
-            "project_id": _get("FIREBASE_PROJECT_ID"),
-            "private_key_id": _get("FIREBASE_PRIVATE_KEY_ID"),
-            "private_key": private_key,
-            "client_email": client_email,
-            "client_id": _get("FIREBASE_CLIENT_ID"),
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{client_email}",
-            "universe_domain": "googleapis.com"
-        }
+        # Try loading from single JSON secret first (CI/GitHub Actions)
+        sa_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON", "")
+        if sa_json:
+            try:
+                config.FIREBASE_SERVICE_ACCOUNT_KEY = json.loads(sa_json)
+                print("   ✅ Firebase: loaded from FIREBASE_SERVICE_ACCOUNT_JSON")
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid FIREBASE_SERVICE_ACCOUNT_JSON: {e}")
+        else:
+            # Fallback: build from individual env vars (local dev)
+            client_email = _get("FIREBASE_CLIENT_EMAIL")
+            private_key = _get("FIREBASE_PRIVATE_KEY")
+            # Handle escaped newlines
+            if private_key and "\\n" in private_key and "\n" not in private_key:
+                private_key = private_key.replace("\\n", "\n")
+            config.FIREBASE_SERVICE_ACCOUNT_KEY = {
+                "type": "service_account",
+                "project_id": _get("FIREBASE_PROJECT_ID"),
+                "private_key_id": _get("FIREBASE_PRIVATE_KEY_ID"),
+                "private_key": private_key,
+                "client_email": client_email,
+                "client_id": _get("FIREBASE_CLIENT_ID"),
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{client_email}",
+                "universe_domain": "googleapis.com"
+            }
         
-        if not config.FIREBASE_SERVICE_ACCOUNT_KEY["project_id"]:
-            raise ValueError("FIREBASE_PROJECT_ID is required (set in .env.local or environment)")
+        if not config.FIREBASE_SERVICE_ACCOUNT_KEY.get("project_id"):
+            raise ValueError(
+                "Firebase project_id is required. "
+                "Set FIREBASE_SERVICE_ACCOUNT_JSON (CI) or individual vars in .env.local (local dev)"
+            )
         
         # Upstage API
         config.UPSTAGE_API_KEY = _get("UPSTAGE_API_KEY")

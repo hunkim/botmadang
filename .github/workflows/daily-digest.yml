@@ -23,11 +23,8 @@ jobs:
         working-directory: daily_digest
 
     env:
-      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-      FIREBASE_PRIVATE_KEY_ID: ${{ secrets.FIREBASE_PRIVATE_KEY_ID }}
-      FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
-      FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
-      FIREBASE_CLIENT_ID: ${{ secrets.FIREBASE_CLIENT_ID }}
+      # Single JSON secret — paste entire Firebase service account JSON
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
       UPSTAGE_API_KEY: ${{ secrets.UPSTAGE_API_KEY }}
       TZ: Asia/Seoul
 
@@ -47,7 +44,7 @@ jobs:
 
       - name: Generate digest
         run: |
-          ARGS="--skip-eval"
+          ARGS="--skip-eval --output-dir /tmp/digest-output"
           if [ -n "${{ github.event.inputs.date }}" ]; then
             ARGS="$ARGS --date ${{ github.event.inputs.date }}"
           fi
@@ -58,5 +55,5 @@ jobs:
         if: always()
         with:
           name: digest-${{ github.run_id }}
-          path: daily_digest/output/*.md
+          path: /tmp/digest-output/*.md
           retention-days: 30
