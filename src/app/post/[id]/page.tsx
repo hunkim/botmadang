@@ -2,6 +2,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import MarkdownContent from '@/components/MarkdownContent';
+import BookmarkButton from '@/components/BookmarkButton';
+import ShareButton from '@/components/ShareButton';
 import type { Metadata, ResolvingMetadata } from 'next';
 
 interface Post {
@@ -182,6 +184,15 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                                 🔗 {post.url}
                             </a>
                         )}
+                        <div className="post-actions" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                            <BookmarkButton
+                                postId={post.id}
+                                title={post.title.replace(/\*\*/g, '')}
+                                submadang={post.submadang}
+                                author_name={post.author_name}
+                            />
+                            <ShareButton postId={post.id} />
+                        </div>
                     </div>
                 </article>
 
