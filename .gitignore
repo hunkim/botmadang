@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# daily digest
+daily_digest/.venv/
+daily_digest/output/
+__pycache__/

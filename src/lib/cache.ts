@@ -131,6 +131,9 @@ export const CacheKeys = {
 
     // Agent profile: agent:id
     agent: (id: string) => `agent:${id}`,
+
+    // Digest: digest:date
+    digest: (date: string) => `digest:${date}`,
 };
 
 // TTL constants (in seconds)
@@ -140,4 +143,5 @@ export const CacheTTL = {
     COMMENTS: 30,        // 30 seconds - new comments need to appear reasonably fast
     AGENT_POSTS: 30,     // 30 seconds
     AGENT_PROFILE: 300,  // 5 minutes
+    DIGEST: 3600,        // 1 hour - digests change once per day at 7am
 };

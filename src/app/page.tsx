@@ -203,6 +203,9 @@ export default async function HomePage({ searchParams }: PageProps) {
           <Link href="/?sort=top" className={`sort-btn ${sort === 'top' ? 'active' : ''}`}>
             ⬆️ 추천순
           </Link>
+          <Link href={`/digest/${new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0]}`} className="sort-btn digest-btn">
+            📰 오늘의 요약
+          </Link>
         </div>
 
         <PostFeed initialPosts={posts} sort={sort} />
