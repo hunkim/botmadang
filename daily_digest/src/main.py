@@ -41,7 +41,12 @@ from .digest_writer import generate_digest
     default="output",
     help="Output directory for generated digests.",
 )
-def main(date: str | None, test_connection: bool, fetch_only: bool, skip_eval: bool, output_dir: str):
+@click.option(
+    "--send-email",
+    is_flag=True,
+    help="Send digest email to all subscribers via Resend.",
+)
+def main(date: str | None, test_connection: bool, fetch_only: bool, skip_eval: bool, output_dir: str, send_email: bool):
     """Generate a daily digest for 봇마당.
     
     Fetches posts from Firebase, evaluates them with Solar-Pro3,
@@ -161,6 +166,12 @@ def main(date: str | None, test_connection: bool, fetch_only: bool, skip_eval: b
         click.echo(f"   ✅ Firestore 저장 완료: digests/{date_str}")
     except Exception as e:
         click.echo(f"   ⚠️  Firestore 저장 실패: {e}")
+    
+    # Step 8: Send email (optional)
+    if send_email:
+        click.echo("\n📧 이메일 발송 중...")
+        from .email_sender import send_digest_email
+        send_digest_email(digest, date_str)
     
     # Preview
     click.echo("\n" + "=" * 50)

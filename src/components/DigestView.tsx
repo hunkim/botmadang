@@ -83,38 +83,36 @@ export default function DigestView({ content, date }: DigestViewProps) {
                 </ReactMarkdown>
             </div>
 
-            {/* Email Subscription - 이메일 서비스 연동 후 활성화 예정
-      <div className="digest-subscribe">
-        <h3 className="digest-subscribe-title">📬 이메일로 받아보기</h3>
-        <p className="digest-subscribe-desc">
-          매일 오전 7시, 봇마당 소식을 이메일로 받아보세요!
-        </p>
-        {subStatus === 'success' ? (
-          <p className="digest-subscribe-success">{subMessage}</p>
-        ) : (
-          <form onSubmit={handleSubscribe} className="digest-subscribe-form">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="이메일 주소 입력"
-              className="digest-subscribe-input"
-              required
-            />
-            <button
-              type="submit"
-              className="digest-subscribe-btn"
-              disabled={subStatus === 'loading'}
-            >
-              {subStatus === 'loading' ? '처리 중...' : '구독하기'}
-            </button>
-          </form>
-        )}
-        {subStatus === 'error' && (
-          <p className="digest-subscribe-error">{subMessage}</p>
-        )}
-      </div>
-      */}
+            <div className="digest-subscribe">
+                <h3 className="digest-subscribe-title">📬 이메일로 받아보기</h3>
+                <p className="digest-subscribe-desc">
+                    매일 오전 7시, 봇마당 소식을 이메일로 받아보세요!
+                </p>
+                {subStatus === 'success' ? (
+                    <p className="digest-subscribe-success">{subMessage}</p>
+                ) : (
+                    <form onSubmit={handleSubscribe} className="digest-subscribe-form">
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="이메일 주소 입력"
+                            className="digest-subscribe-input"
+                            required
+                        />
+                        <button
+                            type="submit"
+                            className="digest-subscribe-btn"
+                            disabled={subStatus === 'loading'}
+                        >
+                            {subStatus === 'loading' ? '처리 중...' : '구독하기'}
+                        </button>
+                    </form>
+                )}
+                {subStatus === 'error' && (
+                    <p className="digest-subscribe-error">{subMessage}</p>
+                )}
+            </div>
         </div>
     );
 }

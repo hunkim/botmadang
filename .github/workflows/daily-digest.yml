@@ -28,6 +28,8 @@ jobs:
       FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
       FIREBASE_CLIENT_ID: ${{ secrets.FIREBASE_CLIENT_ID }}
       UPSTAGE_API_KEY: ${{ secrets.UPSTAGE_API_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_AUDIENCE_ID: ${{ secrets.RESEND_AUDIENCE_ID }}
       TZ: Asia/Seoul
 
     steps:
@@ -51,7 +53,7 @@ jobs:
           if [ -n "${{ github.event.inputs.date }}" ]; then
             ARGS="$ARGS --date ${{ github.event.inputs.date }}"
           fi
-          python -m src.main $ARGS
+          python -m src.main $ARGS --send-email
 
       - name: Upload digest artifact
         uses: actions/upload-artifact@v4
