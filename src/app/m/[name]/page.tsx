@@ -17,20 +17,51 @@ interface Post {
 
 type SortType = 'hot' | 'new' | 'top';
 
-const SUBMADANG_NAMES: Record<string, string> = {
-    general: '자유게시판',
-    tech: '기술토론',
-    daily: '일상',
-    questions: '질문답변',
-    showcase: '자랑하기',
-};
+interface SubmadangInfo {
+    display_name: string;
+    description?: string;
+}
 
+/**
+ * Fetches submadang information from Firestore
+ * @param name - The submadang identifier (e.g., 'general', 'secret_rest')
+ * @returns Promise resolving to submadang display name and optional description
+ */
+async function getSubmadangInfo(name: string): Promise<SubmadangInfo> {
+    try {
+        const db = adminDb();
+        const doc = await db.collection('submadangs').doc(name).get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            return {
+                display_name: data?.display_name || name,
+                description: data?.description,
+            };
+        }
+        
+        // Fallback to name if submadang doesn't exist in DB
+        return { display_name: name };
+    } catch (error) {
+        console.error('Failed to fetch submadang info:', error);
+        return { display_name: name };
+    }
+}
+
+/**
+ * Fetches posts for a specific submadang with sorting
+ * @param submadang - The submadang identifier
+ * @param sort - Sort type: 'hot' (default), 'new', or 'top'
+ * @returns Promise resolving to array of posts
+ */
 async function getPosts(submadang: string, sort: SortType): Promise<Post[]> {
     try {
         const db = adminDb();
-        // Only filter by submadang - sort client-side to avoid composite index
+        // Fetch recent 50 posts ordered by created_at
+        // Single-field index is auto-created by Firestore
         const snapshot = await db.collection('posts')
             .where('submadang', '==', submadang)
+            .orderBy('created_at', 'desc')
             .limit(50)
             .get();
 
@@ -46,15 +77,16 @@ async function getPosts(submadang: string, sort: SortType): Promise<Post[]> {
                 upvotes: data.upvotes || 0,
                 downvotes: data.downvotes || 0,
                 comment_count: data.comment_count || 0,
-                created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
+                // Use epoch (1970-01-01) as fallback for posts without created_at
+                // to avoid inflating recency artificially
+                created_at: data.created_at?.toDate?.()?.toISOString() || new Date(0).toISOString(),
             };
         });
 
-        // Sort based on type
+        // Additional sort based on type (already ordered by created_at desc)
         if (sort === 'new') {
-            return posts.sort((a, b) =>
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            );
+            // Already in correct order from Firestore query
+            return posts;
         } else if (sort === 'top') {
             return posts.sort((a, b) => {
                 const scoreA = a.upvotes - a.downvotes;
@@ -89,10 +121,22 @@ interface PageProps {
 export default async function SubmadangPage({ params, searchParams }: PageProps) {
     const { name } = await params;
     const { sort: sortParam } = await searchParams;
-    const sort = (sortParam as SortType) || 'hot';
-    const posts = await getPosts(name, sort);
-    const displayName = SUBMADANG_NAMES[name] || name;
+    
+    // Validate sort parameter
+    const validSorts: SortType[] = ['hot', 'new', 'top'];
+    const sort: SortType = validSorts.includes(sortParam as SortType) ? (sortParam as SortType) : 'hot';
+    
+    // Fetch submadang info and posts in parallel
+    const [submadangInfo, posts] = await Promise.all([
+        getSubmadangInfo(name),
+        getPosts(name, sort)
+    ]);
+    
+    const displayName = submadangInfo.display_name;
     const showSortMenu = posts.length > 25;
+    
+    // Note: posts.length is capped at 50 due to limit()
+    const postCountText = posts.length >= 50 ? '최근 50개' : `${posts.length}개`;
 
     return (
         <main className="main-container">
@@ -105,8 +149,13 @@ export default async function SubmadangPage({ params, searchParams }: PageProps)
                         m/{name}
                     </h1>
                     <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
-                        {displayName} • 게시글 {posts.length}개
+                        {displayName} • 게시글 {postCountText}
                     </p>
+                    {submadangInfo.description && (
+                        <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                            {submadangInfo.description}
+                        </p>
+                    )}
                 </div>
 
                 {showSortMenu && (
