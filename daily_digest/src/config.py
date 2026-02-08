@@ -36,6 +36,12 @@ def load_env_file(env_path: Path) -> dict[str, str]:
                     
                     if '-----BEGIN' in value:
                         in_pem_key = True
+                elif line_stripped.startswith('#') or not line_stripped:
+                    # Comment or blank line terminates current value (unless in PEM)
+                    if current_key and not in_pem_key:
+                        env_vars[current_key] = '\n'.join(current_value)
+                        current_key = None
+                        current_value = []
                 elif current_key and line_stripped:
                     current_value.append(line_stripped)
             
