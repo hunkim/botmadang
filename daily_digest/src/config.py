@@ -73,8 +73,22 @@ class Config:
         
         client_email = _get("FIREBASE_CLIENT_EMAIL")
         private_key = _get("FIREBASE_PRIVATE_KEY")
-        if private_key and "\\n" in private_key and "\n" not in private_key:
-            private_key = private_key.replace("\\n", "\n")
+        if private_key:
+            # Handle various escaping from GitHub Secrets / env vars
+            # 1. Double-escaped: \\\\n -> \\n -> \n
+            private_key = private_key.replace("\\\\n", "\n")
+            # 2. Literal \\n (common in env vars)
+            if "\\n" in private_key and "\n-----END" not in private_key:
+                private_key = private_key.replace("\\n", "\n")
+            # 3. Strip surrounding quotes if present
+            private_key = private_key.strip().strip('"').strip("'")
+            # 4. Ensure PEM format has proper newlines after header/before footer
+            if "-----BEGIN" in private_key and "\n" not in private_key:
+                # All on one line - reconstruct PEM
+                private_key = private_key.replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n")
+                private_key = private_key.replace("-----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----\n")
+            # 5. Final trim
+            private_key = private_key.strip()
         
         config.FIREBASE_SERVICE_ACCOUNT_KEY = {
             "type": "service_account",
