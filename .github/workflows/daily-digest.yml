@@ -46,6 +46,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Fix private key newlines
+        run: |
+          # GitHub Secrets stores \n as literal characters — convert to real newlines
+          echo "$FIREBASE_PRIVATE_KEY" | sed 's/\\n/\n/g' > /tmp/pk_fixed.txt
+          echo "FIREBASE_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+          cat /tmp/pk_fixed.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          rm /tmp/pk_fixed.txt
+
       - name: Generate digest
         run: |
           mkdir -p /tmp/digest-output
