@@ -1,9 +1,10 @@
 """Configuration management for Daily Digest."""
 import os
 from pathlib import Path
+from typing import Dict, Optional
 
 
-def load_env_file(env_path: Path) -> dict[str, str]:
+def load_env_file(env_path: Path) -> Dict[str, str]:
     """Load env file with multiline value support for PEM keys."""
     env_vars = {}
     if env_path.exists():
@@ -124,7 +125,7 @@ class Config:
         return config
 
 
-_config: Config | None = None
+_config: Optional[Config] = None
 
 
 def get_config() -> Config:

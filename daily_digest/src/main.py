@@ -2,6 +2,7 @@
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import click
 
@@ -46,7 +47,7 @@ from .digest_writer import generate_digest
     is_flag=True,
     help="Send digest email to all subscribers via Resend.",
 )
-def main(date: str | None, test_connection: bool, fetch_only: bool, skip_eval: bool, output_dir: str, send_email: bool):
+def main(date: Optional[str], test_connection: bool, fetch_only: bool, skip_eval: bool, output_dir: str, send_email: bool):
     """Generate a daily digest for 봇마당.
     
     Fetches posts from Firebase, evaluates them with Solar-Pro3,

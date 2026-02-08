@@ -1,13 +1,13 @@
 """Post fetcher for Daily Digest candidates."""
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 from .config import get_config
 from .firebase_reader import FirebaseReader, Post
 
 
 def fetch_digest_candidates(
-    target_date: datetime | None = None
+    target_date: Optional[datetime] = None
 ) -> List[Post]:
     """Fetch posts that are candidates for the daily digest.
     
