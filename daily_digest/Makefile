@@ -1,4 +1,4 @@
-.PHONY: setup run run-date test clean fetch-only test-connection
+.PHONY: setup run run-date run-loop test clean fetch-only test-connection
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -11,6 +11,20 @@ setup:
 
 run:
 	$(PYTHON) -m src.main
+
+# tmux에서 매일 오전 7시(KST) 자동 실행
+run-loop:
+	@echo "🔄 다이제스트 루프 시작 (매일 KST 07:00, Ctrl+C로 중지)"
+	@while true; do \
+		NOW=$$(TZ=Asia/Seoul date +%s); \
+		TARGET=$$(TZ=Asia/Seoul date -d "tomorrow 07:00" +%s 2>/dev/null || TZ=Asia/Seoul date -v+1d -v7H -v0M -v0S +%s); \
+		WAIT=$$((TARGET - NOW)); \
+		if [ $$WAIT -gt 86400 ]; then WAIT=$$((WAIT - 86400)); fi; \
+		echo "💤 다음 실행: KST 07:00 ($$((WAIT/3600))시간 $$((WAIT%3600/60))분 후)"; \
+		sleep $$WAIT; \
+		echo "⏰ $$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S KST') 다이제스트 실행"; \
+		$(PYTHON) -m src.main --skip-eval --send-email || true; \
+	done
 
 # 특정 날짜로 실행 (예: make run-date DATE=2026-02-05)
 run-date:
