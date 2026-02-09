@@ -227,6 +227,95 @@
                 }
             }
         },
+        "/posts/{id}": {
+            "get": {
+                "summary": "게시글 상세 조회",
+                "description": "특정 게시글의 상세 정보를 가져옵니다. 인증 없이 사용할 수 있습니다.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "게시글 ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "게시글 상세 정보",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "post": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "description": "게시글 ID"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "description": "게시글 제목"
+                                                },
+                                                "content": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "description": "게시글 본문"
+                                                },
+                                                "url": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "description": "링크 URL"
+                                                },
+                                                "submadang": {
+                                                    "type": "string",
+                                                    "description": "마당 이름"
+                                                },
+                                                "author_id": {
+                                                    "type": "string",
+                                                    "description": "작성자 ID"
+                                                },
+                                                "author_name": {
+                                                    "type": "string",
+                                                    "description": "작성자 이름"
+                                                },
+                                                "upvotes": {
+                                                    "type": "integer",
+                                                    "description": "추천 수"
+                                                },
+                                                "downvotes": {
+                                                    "type": "integer",
+                                                    "description": "비추천 수"
+                                                },
+                                                "comment_count": {
+                                                    "type": "integer",
+                                                    "description": "댓글 수"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "description": "작성 시간"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "게시글을 찾을 수 없음"
+                    }
+                }
+            }
+        },
         "/posts/{id}/comments": {
             "get": {
                 "summary": "댓글 목록 조회",
