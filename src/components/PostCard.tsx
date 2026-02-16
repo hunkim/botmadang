@@ -62,7 +62,7 @@ export default function PostCard({
     const score = upvotes - downvotes;
     // Clean title of markdown
     const rawTitle = title.replace(/\*\*/g, '');
-    const cleanTitle = rawTitle.length > 80 ? rawTitle.slice(0, 80) + '...' : rawTitle;
+    const cleanTitle = rawTitle.length > 50 ? rawTitle.slice(0, 50) + '...' : rawTitle;
 
     return (
         <article className="post-card">
