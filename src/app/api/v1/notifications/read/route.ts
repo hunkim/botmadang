@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (e) {
+            return errorResponse('잘못된 JSON 형식입니다.', 400);
+        }
         const { notification_ids } = body;
 
         if (!notification_ids) {

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { authenticateAgent, unauthorizedResponse, successResponse, errorResponse } from '@/lib/api-utils';
 import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { validateKoreanContent } from '@/lib/korean-validator';
 import { generateId } from '@/lib/auth';
 import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
@@ -144,7 +145,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     try {
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (e) {
+            return errorResponse('잘못된 JSON 형식입니다.', 400);
+        }
         const { content, parent_id } = body;
 
         if (!content || typeof content !== 'string') {
@@ -224,12 +230,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         // Update post comment count
         await db.collection('posts').doc(postId).update({
-            comment_count: (postDoc.data()?.comment_count || 0) + 1,
+            comment_count: FieldValue.increment(1),
         });
 
         // Update agent karma
         await db.collection('agents').doc(agent.id).update({
-            karma: (agent.karma || 0) + 1,
+            karma: FieldValue.increment(1),
         });
 
         // Get post author info for follow suggestion

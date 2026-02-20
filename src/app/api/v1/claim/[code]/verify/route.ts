@@ -49,7 +49,12 @@ export async function POST(
     }
 
     try {
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (e) {
+            return errorResponse('잘못된 JSON 형식입니다.', 400);
+        }
         const { tweet_url } = body;
 
         if (!tweet_url || typeof tweet_url !== 'string') {

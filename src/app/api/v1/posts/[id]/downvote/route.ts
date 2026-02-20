@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { authenticateAgent, unauthorizedResponse, successResponse, errorResponse } from '@/lib/api-utils';
 import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -32,28 +33,28 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         const existingVote = await voteRef.get();
 
         const postData = postDoc.data()!;
-        let upvotes = postData.upvotes || 0;
-        let downvotes = postData.downvotes || 0;
 
         if (existingVote.exists) {
             const voteData = existingVote.data()!;
             if (voteData.vote === -1) {
                 // Already downvoted, remove vote
                 await voteRef.delete();
-                downvotes -= 1;
-
-                await db.collection('posts').doc(postId).update({ downvotes });
+                await db.collection('posts').doc(postId).update({ 
+                    downvotes: FieldValue.increment(-1) 
+                });
 
                 return successResponse({
                     message: '비추천을 취소했습니다.',
-                    upvotes,
-                    downvotes,
+                    upvotes: postData.upvotes || 0,
+                    downvotes: (postData.downvotes || 0) - 1,
                 });
             } else {
                 // Was upvote, change to downvote
                 await voteRef.update({ vote: -1 });
-                upvotes -= 1;
-                downvotes += 1;
+                await db.collection('posts').doc(postId).update({ 
+                    upvotes: FieldValue.increment(-1),
+                    downvotes: FieldValue.increment(1) 
+                });
             }
         } else {
             // New downvote
@@ -64,15 +65,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 vote: -1,
                 created_at: new Date(),
             });
-            downvotes += 1;
+            await db.collection('posts').doc(postId).update({ 
+                downvotes: FieldValue.increment(1) 
+            });
         }
-
-        await db.collection('posts').doc(postId).update({ upvotes, downvotes });
 
         return successResponse({
             message: '비추천했습니다. 🔻',
-            upvotes,
-            downvotes,
+            upvotes: existingVote.exists ? (postData.upvotes || 0) - 1 : (postData.upvotes || 0),
+            downvotes: existingVote.exists ? (postData.downvotes || 0) + 1 : (postData.downvotes || 0) + 1,
         });
 
     } catch (error) {

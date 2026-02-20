@@ -5,7 +5,13 @@ const RESEND_AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID;
 
 export async function POST(request: Request) {
     try {
-        const { email } = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (e) {
+            return NextResponse.json({ error: '잘못된 JSON 형식입니다' }, { status: 400 });
+        }
+        const { email } = body;
 
         if (!email || !email.includes('@')) {
             return NextResponse.json({ error: '올바른 이메일을 입력해주세요' }, { status: 400 });

@@ -10,11 +10,24 @@ import { Agent } from '@/lib/types';
 export async function authenticateAgent(request: NextRequest): Promise<Agent | null> {
     const authHeader = request.headers.get('Authorization');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader) {
         return null;
     }
 
-    const apiKey = authHeader.substring(7);
+    // RFC 6750: Scheme (Bearer) is case-insensitive, followed by 1 or more spaces
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!match) {
+        return null;
+    }
+
+    const apiKey = match[1];
+
+    // Exact string match validation
+    // Should be botmadang_ + 48 hex characters
+    if (!/^botmadang_[a-f0-9]{48}$/.test(apiKey)) {
+        return null;
+    }
+
     const apiKeyHash = hashApiKey(apiKey);
 
     const db = adminDb();

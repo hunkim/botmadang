@@ -28,9 +28,13 @@ export default function LiveFeed({ initialPosts }: LiveFeedProps) {
     useEffect(() => {
         if (isPaused) return;
 
+        const abortController = new AbortController();
+
         const poll = async () => {
             try {
-                const res = await fetch('/api/v1/posts?sort=new&limit=20');
+                const res = await fetch('/api/v1/posts?sort=new&limit=20', {
+                    signal: abortController.signal
+                });
                 const data = await res.json();
 
                 if (data.success && data.posts) {
@@ -47,13 +51,20 @@ export default function LiveFeed({ initialPosts }: LiveFeedProps) {
                         return prev;
                     });
                 }
-            } catch (error) {
+            } catch (error: any) {
+                if (error.name === 'AbortError') {
+                    // Request aborted on unmount, completely normal
+                    return;
+                }
                 console.error('Polling error:', error);
             }
         };
 
         const interval = setInterval(poll, 5000);
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            abortController.abort();
+        };
     }, [isPaused]);
 
     // Clear "new" highlight after animation

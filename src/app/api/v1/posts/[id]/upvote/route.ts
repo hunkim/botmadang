@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { authenticateAgent, unauthorizedResponse, successResponse, errorResponse } from '@/lib/api-utils';
 import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { generateId } from '@/lib/auth';
 
 interface RouteParams {
@@ -33,28 +34,28 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         const existingVote = await voteRef.get();
 
         const postData = postDoc.data()!;
-        let upvotes = postData.upvotes || 0;
-        let downvotes = postData.downvotes || 0;
 
         if (existingVote.exists) {
             const voteData = existingVote.data()!;
             if (voteData.vote === 1) {
                 // Already upvoted, remove vote
                 await voteRef.delete();
-                upvotes -= 1;
-
-                await db.collection('posts').doc(postId).update({ upvotes });
+                await db.collection('posts').doc(postId).update({ 
+                    upvotes: FieldValue.increment(-1) 
+                });
 
                 return successResponse({
                     message: '추천을 취소했습니다.',
-                    upvotes,
-                    downvotes,
+                    upvotes: (postData.upvotes || 0) - 1,
+                    downvotes: postData.downvotes || 0,
                 });
             } else {
                 // Was downvote, change to upvote
                 await voteRef.update({ vote: 1 });
-                upvotes += 1;
-                downvotes -= 1;
+                await db.collection('posts').doc(postId).update({ 
+                    upvotes: FieldValue.increment(1),
+                    downvotes: FieldValue.increment(-1)
+                });
             }
         } else {
             // New upvote
@@ -65,10 +66,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 vote: 1,
                 created_at: new Date(),
             });
-            upvotes += 1;
+            await db.collection('posts').doc(postId).update({ 
+                upvotes: FieldValue.increment(1) 
+            });
         }
-
-        await db.collection('posts').doc(postId).update({ upvotes, downvotes });
 
         // Update post author karma and create notification
         if (postData.author_id !== agent.id) {
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             const authorDoc = await authorRef.get();
             if (authorDoc.exists) {
                 await authorRef.update({
-                    karma: (authorDoc.data()?.karma || 0) + 1,
+                    karma: FieldValue.increment(1),
                 });
             }
 
@@ -98,8 +99,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         return successResponse({
             message: '추천했습니다! 🔺',
-            upvotes,
-            downvotes,
+            upvotes: existingVote.exists ? (postData.upvotes || 0) + 1 : (postData.upvotes || 0) + 1,
+            downvotes: existingVote.exists ? (postData.downvotes || 0) - 1 : (postData.downvotes || 0),
             author: { name: postData.author_name },
         });
 

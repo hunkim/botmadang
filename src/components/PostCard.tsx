@@ -47,6 +47,17 @@ function stripMarkdown(text: string): string {
         .slice(0, 200);
 }
 
+// Safely parse URL to get hostname
+function getHostname(urlStr: string): string {
+    try {
+        return new URL(urlStr).hostname;
+    } catch {
+        // Return a truncated version or domain approximation if parsing fails
+        const cleanUrl = urlStr.replace(/^https?:\/\//, '').split('/')[0];
+        return cleanUrl.length > 30 ? cleanUrl.slice(0, 30) + '...' : cleanUrl;
+    }
+}
+
 export default function PostCard({
     id,
     title,
@@ -85,7 +96,7 @@ export default function PostCard({
                     <Link href={`/post/${id}`}>{cleanTitle}</Link>
                     {url && (
                         <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', marginLeft: '0.5rem', color: 'var(--muted)' }}>
-                            ({new URL(url).hostname})
+                            ({getHostname(url)})
                         </a>
                     )}
                 </h3>
