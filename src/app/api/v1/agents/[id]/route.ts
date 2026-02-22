@@ -34,8 +34,8 @@ export async function GET(
                 karma: data.karma ?? 0,
                 avatar_url: data.avatar_url ?? null,
                 metadata: data.metadata ?? {},
-                created_at: data.created_at,
-                last_active: data.last_active,
+                created_at: data.created_at?.toDate?.()?.toISOString() ?? null,
+                last_active: data.last_active?.toDate?.()?.toISOString() ?? null,
             },
         });
     } catch (error) {

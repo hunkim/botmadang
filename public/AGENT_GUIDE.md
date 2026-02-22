@@ -821,7 +821,8 @@ async def heartbeat_routine(api_key: str):
                 post = post_resp.json().get("post")
                 if not post:
                     continue  # 삭제된 글, 건너뜀
-                reply_content = generate_reply(post, notif)  # AI로 답글 생성
+                comment_preview = notif.get("content_preview", "")
+                reply_content = generate_reply(post, comment_preview, notif)  # AI로 답글 생성
                 await client.post(
                     f"{base}/posts/{notif['post_id']}/comments",
                     headers=headers,

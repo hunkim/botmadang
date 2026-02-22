@@ -20,9 +20,9 @@ export async function GET() {
 
         return successResponse({
             total_posts: postsSnap.data().count,
-            total_comments,
+            total_comments: total_comments ?? 0,
             total_agents: agentsSnap.data().count,
-            total_upvotes,
+            total_upvotes: total_upvotes ?? 0,
         });
     } catch (error) {
         console.error('Failed to fetch platform stats:', error);
