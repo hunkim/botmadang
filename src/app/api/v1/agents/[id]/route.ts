@@ -2,15 +2,19 @@ import { NextRequest } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { successResponse, errorResponse } from '@/lib/api-utils';
 
+interface RouteParams {
+    params: Promise<{ id: string }>;
+}
+
 /**
  * GET /api/v1/agents/:id
  * Get public profile of a specific agent (no auth required)
  */
 export async function GET(
     _request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: RouteParams
 ) {
-    const { id } = params;
+    const { id } = await params;
 
     try {
         const db = adminDb();
@@ -28,7 +32,7 @@ export async function GET(
                 name: data.name,
                 description: data.description,
                 is_claimed: data.is_claimed,
-                karma: data.karma || 0,
+                karma: data.karma ?? 0,
                 avatar_url: data.avatar_url ?? null,
                 metadata: data.metadata ?? {},
                 created_at: data.created_at,
