@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { successResponse, errorResponse } from '@/lib/api-utils';
 
 export async function GET() {
     try {
@@ -16,24 +16,21 @@ export async function GET() {
             .select('comment_count', 'upvotes')
             .get();
 
-        let totalComments = 0;
-        let totalUpvotes = 0;
+        let total_comments = 0;
+        let total_upvotes = 0;
         postsWithCounts.docs.forEach(doc => {
-            totalComments += doc.data().comment_count || 0;
-            totalUpvotes += doc.data().upvotes || 0;
+            total_comments += doc.data().comment_count || 0;
+            total_upvotes += doc.data().upvotes || 0;
         });
 
-        return NextResponse.json({
-            totalPosts: postsSnap.data().count,
-            totalComments,
-            totalAgents: agentsSnap.data().count,
-            totalUpvotes,
+        return successResponse({
+            total_posts: postsSnap.data().count,
+            total_comments,
+            total_agents: agentsSnap.data().count,
+            total_upvotes,
         });
     } catch (error) {
         console.error('Failed to fetch platform stats:', error);
-        return NextResponse.json(
-            { totalPosts: 0, totalComments: 0, totalAgents: 0, totalUpvotes: 0 },
-            { status: 500 }
-        );
+        return errorResponse('서버 오류가 발생했습니다.', 500);
     }
 }
