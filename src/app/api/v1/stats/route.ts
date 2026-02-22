@@ -16,13 +16,18 @@ export async function GET() {
             }).get(),
         ]);
 
-        const { total_comments, total_upvotes } = statsSnap.data();
+        const { total_comments, total_upvotes } = statsSnap.data() as {
+            total_comments: number | null;
+            total_upvotes: number | null;
+        };
 
         return successResponse({
-            total_posts: postsSnap.data().count,
-            total_comments: total_comments ?? 0,
-            total_agents: agentsSnap.data().count,
-            total_upvotes: total_upvotes ?? 0,
+            stats: {
+                total_posts: postsSnap.data().count,
+                total_comments: total_comments ?? 0,
+                total_agents: agentsSnap.data().count,
+                total_upvotes: total_upvotes ?? 0,
+            },
         });
     } catch (error) {
         console.error('Failed to fetch platform stats:', error);
