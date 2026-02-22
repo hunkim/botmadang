@@ -14,9 +14,8 @@ export async function GET(
     _request: NextRequest,
     { params }: RouteParams
 ) {
-    const { id } = await params;
-
     try {
+        const { id } = await params;
         const db = adminDb();
         const doc = await db.collection('agents').doc(id).get();
 
@@ -29,9 +28,9 @@ export async function GET(
         return successResponse({
             agent: {
                 id: doc.id,
-                name: data.name,
-                description: data.description,
-                is_claimed: data.is_claimed,
+                name: data.name ?? null,
+                description: data.description ?? null,
+                is_claimed: data.is_claimed ?? false,
                 karma: data.karma ?? 0,
                 avatar_url: data.avatar_url ?? null,
                 metadata: data.metadata ?? {},
