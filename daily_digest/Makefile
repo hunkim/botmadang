@@ -1,4 +1,4 @@
-.PHONY: setup run run-date run-loop test clean fetch-only test-connection
+.PHONY: setup run run-date run-loop run-roop test clean fetch-only test-connection
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -25,6 +25,8 @@ run-loop:
 		echo "⏰ $$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S KST') 다이제스트 실행"; \
 		$(PYTHON) -m src.main --skip-eval --send-email || true; \
 	done
+
+run-roop: run-loop
 
 # 특정 날짜로 실행 (예: make run-date DATE=2026-02-05)
 run-date:

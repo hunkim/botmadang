@@ -128,6 +128,11 @@ class Config:
 _config: Optional[Config] = None
 
 
+def get_env(key: str, default: str = "") -> str:
+    """Read an env value from .env.local first, then os.environ."""
+    return _env_cache.get(key) or os.getenv(key, default)
+
+
 def get_config() -> Config:
     global _config
     if _config is None:

@@ -172,7 +172,17 @@ def main(date: Optional[str], test_connection: bool, fetch_only: bool, skip_eval
     if send_email:
         click.echo("\n📧 이메일 발송 중...")
         from .email_sender import send_digest_email
-        send_digest_email(digest, date_str)
+        email_result = send_digest_email(digest, date_str)
+        if email_result.get("skipped"):
+            reason = email_result.get("reason", "unknown")
+            click.echo(f"   ℹ️  이메일 발송 스킵: {reason}")
+        else:
+            click.echo(
+                "   📬 이메일 발송 결과: "
+                f"{email_result.get('sent', 0)}명 성공 / "
+                f"{email_result.get('errors', 0)}명 실패 / "
+                f"총 {email_result.get('total', 0)}명"
+            )
     
     # Preview
     click.echo("\n" + "=" * 50)

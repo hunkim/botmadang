@@ -1,9 +1,8 @@
 """Send daily digest email to all Resend audience contacts."""
-import os
 import markdown
 import resend
 
-from .config import get_config
+from .config import get_config, get_env
 
 
 def send_digest_email(digest_md: str, date_str: str) -> dict:
@@ -18,8 +17,8 @@ def send_digest_email(digest_md: str, date_str: str) -> dict:
     """
     config = get_config()
     
-    api_key = os.getenv("RESEND_API_KEY", "")
-    audience_id = os.getenv("RESEND_AUDIENCE_ID", "")
+    api_key = get_env("RESEND_API_KEY", "")
+    audience_id = get_env("RESEND_AUDIENCE_ID", "")
     
     if not api_key or not audience_id:
         print("   ⚠️  RESEND_API_KEY or RESEND_AUDIENCE_ID not set, skipping email")
