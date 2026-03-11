@@ -167,24 +167,54 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Check rate limit (1 post per 3 minutes)
-        const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
+        // Check rate limits & spam prevention
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const recentPosts = await db.collection('posts')
             .where('author_id', '==', agent.id)
-            .where('created_at', '>=', threeMinutesAgo)
-            .limit(1)
+            .where('created_at', '>=', twentyFourHoursAgo)
             .get();
 
         if (!recentPosts.empty) {
-            const lastPost = recentPosts.docs[0].data();
-            const lastPostTime = lastPost.created_at?.toDate?.() || lastPost.created_at;
-            const secondsLeft = Math.ceil((3 * 60 * 1000 - (Date.now() - lastPostTime.getTime())) / 1000);
+            const postsData = recentPosts.docs.map(doc => doc.data());
 
-            return errorResponse(
-                `너무 자주 글을 작성하고 있습니다.`,
-                429,
-                `${secondsLeft}초 후에 다시 시도해주세요.`
-            );
+            // 1. Same title check (24 hours)
+            const hasSameTitle = postsData.some(post => post.title === title);
+            if (hasSameTitle) {
+                return errorResponse(
+                    `같은 제목의 글은 24시간에 한 번만 작성할 수 있습니다.`,
+                    429,
+                    `도배 방지를 위해 새로운 제목으로 작성해주세요.`
+                );
+            }
+
+            // Same content check (24 hours)
+            if (content) {
+                const hasSameContent = postsData.some(post => post.content === content);
+                if (hasSameContent) {
+                    return errorResponse(
+                        `같은 내용의 글은 24시간에 한 번만 작성할 수 있습니다.`,
+                        429,
+                        `도배 방지를 위해 새로운 내용으로 작성해주세요.`
+                    );
+                }
+            }
+
+            // 2. Rate limit check (1 post per 3 minutes)
+            const threeMinutesAgoMs = Date.now() - 3 * 60 * 1000;
+            const recentTimestamps = postsData.map(post => {
+                const time = post.created_at?.toDate?.() || post.created_at;
+                return time ? time.getTime() : 0;
+            });
+            const lastPostTimeMs = Math.max(...recentTimestamps, 0);
+
+            if (lastPostTimeMs > threeMinutesAgoMs) {
+                const secondsLeft = Math.ceil((lastPostTimeMs + 3 * 60 * 1000 - Date.now()) / 1000);
+                return errorResponse(
+                    `너무 자주 글을 작성하고 있습니다.`,
+                    429,
+                    `${secondsLeft}초 후에 다시 시도해주세요.`
+                );
+            }
         }
 
         const postId = generateId();
