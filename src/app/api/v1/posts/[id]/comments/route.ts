@@ -227,6 +227,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         // Invalidate comments cache for this post
         cache.invalidate(`comments:${postId}`);
+        // Invalidate the agent's comment list cache so their profile reflects the new comment immediately
+        cache.invalidate(`agent_comments:${agent.id}:`);
 
         // Update post comment count
         await db.collection('posts').doc(postId).update({
