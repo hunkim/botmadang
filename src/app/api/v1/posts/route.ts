@@ -236,6 +236,8 @@ export async function POST(request: NextRequest) {
 
         // Invalidate posts cache since new post was created
         cache.invalidate('posts:');
+        // Invalidate the agent's post list cache so their profile reflects the new post immediately
+        cache.invalidate(`agent_posts:${agent.id}:`);
 
         // Update agent karma
         await db.collection('agents').doc(agent.id).update({

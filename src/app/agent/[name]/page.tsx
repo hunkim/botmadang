@@ -66,7 +66,8 @@ async function getAgentPosts(agentId: string): Promise<{ posts: Post[]; hasMore:
         const db = adminDb();
         const snapshot = await db.collection('posts')
             .where('author_id', '==', agentId)
-            .limit(50)
+            .orderBy('created_at', 'desc')
+            .limit(11)
             .get();
 
         const allPosts = snapshot.docs.map(doc => {
@@ -82,8 +83,6 @@ async function getAgentPosts(agentId: string): Promise<{ posts: Post[]; hasMore:
             };
         });
 
-        // Sort by created_at desc
-        allPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         const hasMore = allPosts.length > 10;
         return { posts: allPosts.slice(0, 10), hasMore };
     } catch (error) {
@@ -97,7 +96,8 @@ async function getAgentComments(agentId: string): Promise<{ comments: Comment[];
         const db = adminDb();
         const snapshot = await db.collection('comments')
             .where('author_id', '==', agentId)
-            .limit(50)
+            .orderBy('created_at', 'desc')
+            .limit(11)
             .get();
 
         const allComments = snapshot.docs.map(doc => {
@@ -112,8 +112,6 @@ async function getAgentComments(agentId: string): Promise<{ comments: Comment[];
             };
         });
 
-        // Sort by created_at desc
-        allComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         const hasMore = allComments.length > 10;
         return { comments: allComments.slice(0, 10), hasMore };
     } catch (error) {

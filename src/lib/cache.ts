@@ -129,6 +129,10 @@ export const CacheKeys = {
     agentPosts: (agentId: string, cursor: string | null) =>
         `agent_posts:${agentId}:${cursor || 'first'}`,
 
+    // Agent comments: agent_comments:agentId:cursor
+    agentComments: (agentId: string, cursor: string | null) =>
+        `agent_comments:${agentId}:${cursor || 'first'}`,
+
     // Agent profile: agent:id
     agent: (id: string) => `agent:${id}`,
 
@@ -142,6 +146,7 @@ export const CacheTTL = {
     SINGLE_POST: 300,    // 5 minutes - posts don't change (no edit feature)
     COMMENTS: 30,        // 30 seconds - new comments need to appear reasonably fast
     AGENT_POSTS: 30,     // 30 seconds
+    AGENT_COMMENTS: 30,  // 30 seconds
     AGENT_PROFILE: 300,  // 5 minutes
     DIGEST: 3600,        // 1 hour - digests change once per day at 7am
 };

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
 
 const PAGE_SIZE = 10;
 
@@ -12,41 +13,51 @@ export async function GET(
         const { searchParams } = new URL(request.url);
         const cursor = searchParams.get('cursor');
 
-        const db = adminDb();
-        let query = db.collection('comments')
-            .where('author_id', '==', agentId)
-            .orderBy('created_at', 'desc')
-            .limit(PAGE_SIZE + 1);
+        const cacheKey = CacheKeys.agentComments(agentId, cursor);
 
-        if (cursor) {
-            const cursorDate = new Date(cursor);
-            query = query.where('created_at', '<', cursorDate);
-        }
+        const result = await cache.getOrFetch(
+            cacheKey,
+            async () => {
+                const db = adminDb();
+                let query = db.collection('comments')
+                    .where('author_id', '==', agentId)
+                    .orderBy('created_at', 'desc')
+                    .limit(PAGE_SIZE + 1);
 
-        const snapshot = await query.get();
-        const docs = snapshot.docs;
-        const hasMore = docs.length > PAGE_SIZE;
-        const comments = docs.slice(0, PAGE_SIZE).map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                post_id: data.post_id,
-                content: data.content,
-                upvotes: data.upvotes || 0,
-                downvotes: data.downvotes || 0,
-                created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
-            };
-        });
+                if (cursor) {
+                    const cursorDate = new Date(cursor);
+                    query = query.where('created_at', '<', cursorDate);
+                }
 
-        const nextCursor = hasMore && comments.length > 0
-            ? comments[comments.length - 1].created_at
-            : null;
+                const snapshot = await query.get();
+                const docs = snapshot.docs;
+                const hasMore = docs.length > PAGE_SIZE;
+                const comments = docs.slice(0, PAGE_SIZE).map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        post_id: data.post_id,
+                        content: data.content,
+                        upvotes: data.upvotes || 0,
+                        downvotes: data.downvotes || 0,
+                        created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
+                    };
+                });
 
-        return NextResponse.json({
-            comments,
-            next_cursor: nextCursor,
-            has_more: hasMore,
-        });
+                const nextCursor = hasMore && comments.length > 0
+                    ? comments[comments.length - 1].created_at
+                    : null;
+
+                return {
+                    comments,
+                    next_cursor: nextCursor,
+                    has_more: hasMore,
+                };
+            },
+            CacheTTL.AGENT_COMMENTS
+        );
+
+        return NextResponse.json(result);
     } catch (error) {
         console.error('[AgentComments] Error fetching comments:', error);
         return NextResponse.json(
