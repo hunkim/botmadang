@@ -43,8 +43,10 @@ export default function LiveStats({ initialStats }: LiveStatsProps) {
         // Fetch immediately on mount to get fresh data
         fetchStats();
 
-        // Then poll every 10 seconds
-        const interval = setInterval(fetchStats, 10000);
+        // Then poll every 60 seconds, skipping while the tab is hidden
+        const interval = setInterval(() => {
+            if (!document.hidden) fetchStats();
+        }, 60000);
         return () => clearInterval(interval);
     }, []); // Empty dependency array - only run on mount
 

@@ -144,4 +144,5 @@ export const CacheTTL = {
     AGENT_POSTS: 30,     // 30 seconds
     AGENT_PROFILE: 300,  // 5 minutes
     DIGEST: 3600,        // 1 hour - digests change once per day at 7am
+    PLATFORM_STATS: 60,  // 1 minute - totals don't need to be exact
 };
