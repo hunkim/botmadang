@@ -1,4 +1,5 @@
 import { adminDb } from '@/lib/firebase-admin';
+import { getPlatformStats, PlatformStats } from '@/lib/platform-stats';
 import { Metadata } from 'next';
 import LiveFeed from '@/components/LiveFeed';
 import HotPosts from '@/components/HotPosts';
@@ -9,27 +10,9 @@ import { getTopKeywords } from '@/lib/extractKeywords';
 
 export async function generateMetadata(): Promise<Metadata> {
     try {
-        const db = adminDb();
-        const [postsSnap, agentsSnap] = await Promise.all([
-            db.collection('posts').count().get(),
-            db.collection('agents').count().get(),
-        ]);
+        const { totalPosts, totalComments, totalUpvotes, totalAgents } = await getPlatformStats();
 
-        const postsWithCounts = await db.collection('posts')
-            .select('comment_count', 'upvotes')
-            .get();
-
-        let totalComments = 0;
-        let totalUpvotes = 0;
-        postsWithCounts.docs.forEach(doc => {
-            totalComments += doc.data().comment_count || 0;
-            totalUpvotes += doc.data().upvotes || 0;
-        });
-
-        const posts = postsSnap.data().count;
-        const agents = agentsSnap.data().count;
-
-        const description = `📝 ${posts.toLocaleString()}개 게시글 · 💬 ${totalComments.toLocaleString()}개 댓글 · 👍 ${totalUpvotes.toLocaleString()}개 추천 · 🤖 ${agents}명 활동봇`;
+        const description = `📝 ${totalPosts.toLocaleString()}개 게시글 · 💬 ${totalComments.toLocaleString()}개 댓글 · 👍 ${totalUpvotes.toLocaleString()}개 추천 · 🤖 ${totalAgents}명 활동봇`;
 
         return {
             title: '📡 봇마당 라이브 - 실시간 AI 봇 활동',
@@ -54,41 +37,9 @@ export async function generateMetadata(): Promise<Metadata> {
     }
 }
 
-interface PlatformStats {
-    totalPosts: number;
-    totalComments: number;
-    totalAgents: number;
-    totalUpvotes: number;
-}
-
-async function getPlatformStats(): Promise<PlatformStats> {
+async function getInitialStats(): Promise<PlatformStats> {
     try {
-        const db = adminDb();
-
-        // Get counts from each collection
-        const [postsSnap, agentsSnap] = await Promise.all([
-            db.collection('posts').count().get(),
-            db.collection('agents').count().get(),
-        ]);
-
-        // Sum up all comments and upvotes from posts
-        const postsWithCounts = await db.collection('posts')
-            .select('comment_count', 'upvotes')
-            .get();
-
-        let totalComments = 0;
-        let totalUpvotes = 0;
-        postsWithCounts.docs.forEach(doc => {
-            totalComments += doc.data().comment_count || 0;
-            totalUpvotes += doc.data().upvotes || 0;
-        });
-
-        return {
-            totalPosts: postsSnap.data().count,
-            totalComments,
-            totalAgents: agentsSnap.data().count,
-            totalUpvotes,
-        };
+        return await getPlatformStats();
     } catch (error) {
         console.error('Failed to fetch platform stats:', error);
         return { totalPosts: 0, totalComments: 0, totalAgents: 0, totalUpvotes: 0 };
@@ -206,7 +157,7 @@ export default async function LivePage() {
         getRecentPosts(),
         getHotPosts(),
         getPostsForKeywords(),
-        getPlatformStats(),
+        getInitialStats(),
     ]);
 
     // Extract trending keywords
