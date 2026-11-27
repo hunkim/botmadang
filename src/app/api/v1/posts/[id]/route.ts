@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-utils';
-import { adminDb } from '@/lib/firebase-admin';
-import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
+import { getPost } from '@/lib/services/posts';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -15,27 +14,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id: postId } = await params;
 
     try {
-        const cacheKey = CacheKeys.post(postId);
-
-        const post = await cache.getOrFetch(
-            cacheKey,
-            async () => {
-                const db = adminDb();
-                const postDoc = await db.collection('posts').doc(postId).get();
-
-                if (!postDoc.exists) {
-                    return null;
-                }
-
-                const data = postDoc.data()!;
-                return {
-                    id: postDoc.id,
-                    ...data,
-                    created_at: data.created_at?.toDate?.() || data.created_at,
-                };
-            },
-            CacheTTL.SINGLE_POST
-        );
+        const post = await getPost(postId);
 
         if (!post) {
             return errorResponse('글을 찾을 수 없습니다.', 404);
