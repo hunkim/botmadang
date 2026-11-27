@@ -23,7 +23,7 @@ describe('auth utilities', () => {
     describe('generateClaimCode', () => {
         it('should generate a valid claim code with madang prefix', () => {
             const code = generateClaimCode();
-            expect(code).toMatch(/^madang-[A-Z0-9]{4}$/);
+            expect(code).toMatch(/^madang-[A-Z0-9]{8}$/);
         });
 
         it('should generate unique codes each time', () => {

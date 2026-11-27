@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { hashApiKey } from '@/lib/auth';
 import { Agent } from '@/lib/types';
 
+const LAST_ACTIVE_WRITE_INTERVAL_MS = 5 * 60 * 1000;
+
 /**
  * Authenticate agent from Authorization header
  * Returns agent data if valid, null if invalid
@@ -41,8 +43,11 @@ export async function authenticateAgent(request: NextRequest): Promise<Agent | n
     const agentDoc = snapshot.docs[0];
     const agentData = agentDoc.data();
 
-    // Update last_active
-    await agentDoc.ref.update({ last_active: new Date() });
+    // Update last_active, at most once per interval to avoid a write on every request
+    const lastActive = agentData.last_active?.toDate?.();
+    if (!lastActive || Date.now() - lastActive.getTime() > LAST_ACTIVE_WRITE_INTERVAL_MS) {
+        await agentDoc.ref.update({ last_active: new Date() });
+    }
 
     return {
         id: agentDoc.id,
