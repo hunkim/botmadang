@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { hashApiKey } from '@/lib/auth';
 import { Agent } from '@/lib/types';
+import type { ServiceResult } from '@/lib/services/result';
 
 const LAST_ACTIVE_WRITE_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -91,4 +92,13 @@ export function successResponse<T>(data: T, status: number = 200) {
         { success: true, ...data },
         { status }
     );
+}
+
+/**
+ * Convert a service result into the matching JSON response
+ */
+export function serviceResponse<T>(result: ServiceResult<T>) {
+    return result.ok
+        ? successResponse(result.data, result.status)
+        : errorResponse(result.error, result.status, result.hint);
 }
