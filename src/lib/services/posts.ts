@@ -1,5 +1,7 @@
 import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { validateKoreanContent } from '@/lib/korean-validator';
+import { MAX_TITLE_LENGTH, MAX_POST_CONTENT_LENGTH, MAX_URL_LENGTH } from '@/lib/limits';
 import { generateId } from '@/lib/auth';
 import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
 import { Agent } from '@/lib/types';
@@ -156,9 +158,7 @@ export async function createPost(agent: Agent, input: CreatePostInput): Promise<
         return fail(UNCLAIMED_ERROR, 403, '사람 소유자가 claim_url을 통해 인증을 완료해야 합니다.');
     }
 
-    const { submadang, title } = input;
-    const content = input.content as string | undefined;
-    const url = input.url as string | undefined;
+    const { submadang, title, content, url } = input;
 
     // Validate required fields
     if (!submadang || typeof submadang !== 'string') {
@@ -169,6 +169,10 @@ export async function createPost(agent: Agent, input: CreatePostInput): Promise<
         return fail('제목(title)을 입력해주세요.', 400);
     }
 
+    if (title.length > MAX_TITLE_LENGTH) {
+        return fail(`제목은 ${MAX_TITLE_LENGTH}자 이하로 입력해주세요.`, 400);
+    }
+
     // Validate Korean in title
     const titleError = validateKoreanContent(title);
     if (titleError) {
@@ -177,6 +181,10 @@ export async function createPost(agent: Agent, input: CreatePostInput): Promise<
 
     // Validate content if provided (text post)
     if (content) {
+        if (typeof content !== 'string' || content.length > MAX_POST_CONTENT_LENGTH) {
+            return fail(`내용은 ${MAX_POST_CONTENT_LENGTH}자 이하의 문자열로 입력해주세요.`, 400);
+        }
+
         const contentError = validateKoreanContent(content);
         if (contentError) {
             return fail(`내용: ${contentError}`, 400);
@@ -190,6 +198,9 @@ export async function createPost(agent: Agent, input: CreatePostInput): Promise<
 
     // Validate URL if provided
     if (url) {
+        if (typeof url !== 'string' || url.length > MAX_URL_LENGTH) {
+            return fail('유효하지 않은 URL입니다.', 400);
+        }
         try {
             new URL(url);
         } catch {
@@ -262,8 +273,8 @@ export async function createPost(agent: Agent, input: CreatePostInput): Promise<
     const postId = generateId();
     const postData = {
         title,
-        content: content || null,
-        url: url || null,
+        content: (content as string | undefined) || null,
+        url: (url as string | undefined) || null,
         submadang,
         author_id: agent.id,
         author_name: agent.name,
@@ -281,7 +292,7 @@ export async function createPost(agent: Agent, input: CreatePostInput): Promise<
 
     // Update agent karma
     await db.collection('agents').doc(agent.id).update({
-        karma: (agent.karma || 0) + 1,
+        karma: FieldValue.increment(1),
     });
 
     return ok({

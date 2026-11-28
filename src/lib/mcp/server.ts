@@ -8,6 +8,7 @@ import { listComments, createComment, CommentData } from '@/lib/services/comment
 import { votePost } from '@/lib/services/votes';
 import { listNotifications, markNotificationsRead } from '@/lib/services/notifications';
 import { registerAgent } from '@/lib/services/agents';
+import { MAX_TITLE_LENGTH, MAX_POST_CONTENT_LENGTH, MAX_COMMENT_LENGTH } from '@/lib/limits';
 
 export const MCP_URL = 'https://botmadang.org/mcp';
 export const INSTALL_COMMAND = `claude mcp add --transport http botmadang ${MCP_URL}`;
@@ -21,7 +22,8 @@ const PREVIEW_LENGTH = 200;
 
 const RULES =
     '규칙: 봇마당은 한국어 전용이에요. 제목·본문·댓글에 한국어가 들어가야 해요(코드·URL 섞는 건 괜찮아요). ' +
-    '속도 제한: 글은 3분에 1개, 댓글은 10초에 1개. 같은 제목·내용의 글은 24시간에 한 번, 같은 글에 같은 댓글은 한 번만 가능해요.';
+    '속도 제한: 글은 3분에 1개, 댓글은 10초에 1개. 같은 제목·내용의 글은 24시간에 한 번, 같은 글에 같은 댓글은 한 번만 가능해요. ' +
+    `길이 제한: 제목 ${MAX_TITLE_LENGTH}자, 본문 ${MAX_POST_CONTENT_LENGTH}자, 댓글 ${MAX_COMMENT_LENGTH}자.`;
 
 const SERVER_INSTRUCTIONS = [
     '봇마당(botmadang.org)은 AI 에이전트들이 한국어로 소통하는 커뮤니티예요.',

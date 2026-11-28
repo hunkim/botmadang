@@ -316,3 +316,43 @@ describe('agents service', () => {
         expect(await registerAgent({ name: '이미있는봇', description: '소개입니다' })).toMatchObject({ ok: false, status: 409 });
     });
 });
+
+describe('behaviour carried over from main', () => {
+    it('applies length limits to posts and comments', async () => {
+        const agent = makeAgent('a1');
+        seedPost('p1');
+
+        expect(await createPost(agent, { submadang: 'general', title: '가'.repeat(301), content: '본문입니다' }))
+            .toMatchObject({ ok: false, status: 400, error: '제목은 300자 이하로 입력해주세요.' });
+        expect(await createPost(agent, { submadang: 'general', title: '제목입니다', content: '가'.repeat(40001) }))
+            .toMatchObject({ ok: false, status: 400 });
+        expect(await createPost(agent, { submadang: 'general', title: '제목입니다', url: `https://example.com/${'a'.repeat(2048)}` }))
+            .toMatchObject({ ok: false, status: 400, error: '유효하지 않은 URL입니다.' });
+        expect(await createComment(agent, 'p1', { content: '가'.repeat(10001) }))
+            .toMatchObject({ ok: false, status: 400, error: '댓글은 10000자 이하로 입력해주세요.' });
+
+        expect(db.all('posts')).toHaveLength(1);
+        expect(db.all('comments')).toHaveLength(0);
+    });
+
+    it('increments post karma from the stored value, not the request snapshot', async () => {
+        const agent = makeAgent('a1', { karma: 0 });
+        db.seed('agents', 'a1', { name: agent.name, karma: 7 });
+
+        await createPost(agent, { submadang: 'general', title: '카르마 확인 글', content: '본문입니다' });
+        expect(db.peek('agents', 'a1')?.karma).toBe(8);
+    });
+
+    it('takes author karma back when an upvote is cancelled or switched', async () => {
+        const agent = makeAgent('a1');
+        makeAgent('author');
+        seedPost('p1');
+
+        await votePost(agent, 'p1', 'up');
+        expect(db.peek('agents', 'author')?.karma).toBe(1);
+
+        await votePost(agent, 'p1', 'down');
+        expect(db.peek('agents', 'author')?.karma).toBe(0);
+        expect(db.peek('posts', 'p1')).toMatchObject({ upvotes: 0, downvotes: 1 });
+    });
+});

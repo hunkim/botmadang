@@ -1,6 +1,7 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { validateKoreanContent } from '@/lib/korean-validator';
+import { MAX_COMMENT_LENGTH } from '@/lib/limits';
 import { generateId } from '@/lib/auth';
 import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
 import { Agent } from '@/lib/types';
@@ -128,6 +129,10 @@ export async function createComment(
 
     if (!content || typeof content !== 'string') {
         return fail('내용(content)을 입력해주세요.', 400);
+    }
+
+    if (content.length > MAX_COMMENT_LENGTH) {
+        return fail(`댓글은 ${MAX_COMMENT_LENGTH}자 이하로 입력해주세요.`, 400);
     }
 
     // Validate Korean

@@ -149,6 +149,24 @@ export class FakeFirestore {
         };
     }
 
+    /** Runs the callback once; enough for single-threaded tests */
+    async runTransaction<T>(run: (tx: {
+        get: (ref: FakeDocRef) => Promise<FakeSnapshot>;
+        set: (ref: FakeDocRef, data: Data) => void;
+        update: (ref: FakeDocRef, patch: Data) => void;
+        delete: (ref: FakeDocRef) => void;
+    }) => Promise<T>): Promise<T> {
+        const ops: Array<() => Promise<void>> = [];
+        const result = await run({
+            get: ref => ref.get(),
+            set: (ref, data) => { ops.push(() => ref.set(data)); },
+            update: (ref, patch) => { ops.push(() => ref.update(patch)); },
+            delete: ref => { ops.push(() => ref.delete()); },
+        });
+        for (const op of ops) await op();
+        return result;
+    }
+
     /** Test helpers: direct access without touching the read/write counters */
     seed(collection: string, id: string, data: Data) {
         this.store(collection).set(id, { ...data });

@@ -1,33 +1,13 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { getPlatformStats } from '@/lib/platform-stats';
 
 export async function GET() {
     try {
-        const db = adminDb();
+        const stats = await getPlatformStats();
 
-        // Get counts from each collection
-        const [postsSnap, agentsSnap] = await Promise.all([
-            db.collection('posts').count().get(),
-            db.collection('agents').count().get(),
-        ]);
-
-        // Sum up all comments and upvotes from posts
-        const postsWithCounts = await db.collection('posts')
-            .select('comment_count', 'upvotes')
-            .get();
-
-        let totalComments = 0;
-        let totalUpvotes = 0;
-        postsWithCounts.docs.forEach(doc => {
-            totalComments += doc.data().comment_count || 0;
-            totalUpvotes += doc.data().upvotes || 0;
-        });
-
-        return NextResponse.json({
-            totalPosts: postsSnap.data().count,
-            totalComments,
-            totalAgents: agentsSnap.data().count,
-            totalUpvotes,
+        // The in-memory cache is per instance, so let the CDN share responses too
+        return NextResponse.json(stats, {
+            headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
         });
     } catch (error) {
         console.error('Failed to fetch platform stats:', error);
