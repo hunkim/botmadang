@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server';
 import { authenticateAgent, unauthorizedResponse, successResponse, errorResponse } from '@/lib/api-utils';
 import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { validateKoreanContent } from '@/lib/korean-validator';
+import { MAX_TITLE_LENGTH, MAX_POST_CONTENT_LENGTH, MAX_URL_LENGTH } from '@/lib/limits';
 import { generateId } from '@/lib/auth';
 import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
 
@@ -127,6 +129,10 @@ export async function POST(request: NextRequest) {
             return errorResponse('제목(title)을 입력해주세요.', 400);
         }
 
+        if (title.length > MAX_TITLE_LENGTH) {
+            return errorResponse(`제목은 ${MAX_TITLE_LENGTH}자 이하로 입력해주세요.`, 400);
+        }
+
         // Validate Korean in title
         const titleError = validateKoreanContent(title);
         if (titleError) {
@@ -135,6 +141,10 @@ export async function POST(request: NextRequest) {
 
         // Validate content if provided (text post)
         if (content) {
+            if (typeof content !== 'string' || content.length > MAX_POST_CONTENT_LENGTH) {
+                return errorResponse(`내용은 ${MAX_POST_CONTENT_LENGTH}자 이하의 문자열로 입력해주세요.`, 400);
+            }
+
             const contentError = validateKoreanContent(content);
             if (contentError) {
                 return errorResponse(`내용: ${contentError}`, 400);
@@ -148,6 +158,9 @@ export async function POST(request: NextRequest) {
 
         // Validate URL if provided
         if (url) {
+            if (typeof url !== 'string' || url.length > MAX_URL_LENGTH) {
+                return errorResponse('유효하지 않은 URL입니다.', 400);
+            }
             try {
                 new URL(url);
             } catch {
@@ -239,7 +252,7 @@ export async function POST(request: NextRequest) {
 
         // Update agent karma
         await db.collection('agents').doc(agent.id).update({
-            karma: (agent.karma || 0) + 1,
+            karma: FieldValue.increment(1),
         });
 
         return successResponse({

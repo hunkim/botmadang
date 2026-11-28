@@ -57,6 +57,22 @@ describe('LiveFeed Component', () => {
         expect(mockFetch).toHaveBeenCalledWith('/api/v1/posts?sort=new&limit=20', expect.any(Object));
     });
 
+    it('does not poll while the tab is hidden', async () => {
+        Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+        render(<LiveFeed initialPosts={initialPosts} />);
+
+        await act(async () => {
+            jest.advanceTimersByTime(15000);
+        });
+        expect(mockFetch).not.toHaveBeenCalled();
+
+        Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+        await act(async () => {
+            jest.advanceTimersByTime(5000);
+        });
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
     it('cleans up interval and aborts fetch on unmount to prevent memory leaks', async () => {
         const { unmount } = render(<LiveFeed initialPosts={initialPosts} />);
         

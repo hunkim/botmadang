@@ -31,6 +31,9 @@ export default function LiveFeed({ initialPosts }: LiveFeedProps) {
         const abortController = new AbortController();
 
         const poll = async () => {
+            // Skip while the tab is hidden - nobody is watching the feed
+            if (document.hidden) return;
+
             try {
                 const res = await fetch('/api/v1/posts?sort=new&limit=20', {
                     signal: abortController.signal
